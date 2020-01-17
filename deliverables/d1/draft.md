@@ -8,7 +8,7 @@
 |Xiyi Liu|101004577|
 |Alex Trostanovsky|100984702|
 ## What is our project? 
-## What is it interesting? (Describe and justify project selection)
+## Why is it interesting? (Describe and justify project selection)
 ## Why does this project make sense in a mobile form factor?
 
 # Functional + Non-Functional Properties, User Scenarios

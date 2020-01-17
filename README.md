@@ -1,2 +1,2 @@
-# brackit
-COMP3004 - mobile tournament bracket 
+# Brackit
+COMP3004 - Mobile Tournament Bracket Creation
