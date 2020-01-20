@@ -19,9 +19,7 @@
 \renewcommand{\thesubsection}{\arabic{subsection}}%... from subsections
 \usepackage{bookmark}
 \usepackage{enumitem}
-
-
-
+\usepackage{multicol}
 
 \begin{document}
 \begin{center}
@@ -38,9 +36,9 @@
         \href{mailto:suohong.liu@carleton.ca}{suohong.liu@carleton.ca},
         \href{mailto:xiyi.liu@carleton.ca}{xiyi.liu@carleton.ca},
         \href{mailto:alex.trostanovsky@carleton.ca}{alex.trostanovsky@carleton.ca}
-    } \\
-    \vspace{1em}
-    \normalsize{Carleton University, School of Computer Science} \\
+    }
+    % \vspace{1em}
+    % \normalsize{Carleton University, School of Computer Science} \\
 
 \end{center}
 \begin{normalsize}
@@ -49,19 +47,20 @@
 
 \section*{Metadata}
 \subsection*{Team / App Name: \href{https://github.com/alextrosta/brackit}{\texttt{Brackit}}}
-\subsection*{Team member names}
-\begin{center}
-    \begin{tabular}{ |l|c| }
-        \hline
-        \textbf{Name}     & \textbf{Student ID} \\
-        \hline
-        Jaime Herzog      & 101009321           \\
-        Suohong Liu       & 101002340           \\
-        Xiyi Liu          & 101004577           \\
-        Alex Trostanovsky & 100984702           \\
-        \hline
-    \end{tabular}
-\end{center}
+\textbf{Team Member Names:}\\ Jaime Herzog: 101009321, Suohong Liu: 101002340, Xiyi Liu: 101004577, Alex Trostanovsky: 100984702
+% \subsection*{Team member names}
+% \begin{center}
+%     \begin{tabular}{ |l|c| }
+%         \hline
+%         \textbf{Name}     & \textbf{Student ID} \\
+%         \hline
+%         Jaime Herzog      & 101009321           \\
+%         Suohong Liu       & 101002340           \\
+%         Xiyi Liu          & 101004577           \\
+%         Alex Trostanovsky & 100984702           \\
+%         \hline
+%     \end{tabular}
+% \end{center}
 \subsection*{What is our project?}
 \begin{itemize}
     \item{\texttt{Brackit} is a tournament management and attendee platform for mobile.}
@@ -87,18 +86,35 @@
 As experienced tournament organizers, we've experienced firsthand the frustration stemming from the fact that competitors have limited access to information during a tournament. \texttt{Brackit} proposes to fix these problems by enabling players to interact with the tournament bracket on their phones. \\As competitors, we've spent countless hours tabulating historical data from tournaments to get an idea of past results. \texttt{Brackit} solves this problem by centralizing tournaments' data collection on one platform. 
 
 \subsection*{Why does this project make sense in a mobile form factor?}
-Traditionally the only person with information about the ongoing tournament is the tournament organizer, who usually has a laptop or a tablet that every attendee crowds around to see who they have to play against. \\\texttt{Brackit} allows players full access to the bracket in the palm of their hands.
+Traditionally the only person with information about an ongoing tournament is the tournament organizer, who usually has a laptop or a tablet that every attendee crowds around to see who they have to play against. \\\texttt{Brackit} allows players full access to the bracket in the palm of their hands.
 % Brackit is interesting for many reasons. First of all, the leading tournament management services such as challonge do not offer mobile platforms, and navigating these platforms on mobile is unwieldy. Additionally, challonge does not offer comprehensive tournament history, only allowing tournament organizer’s to enter competitors as a string corresponding to their team name or tag, not allowing for competitors to enter under a cross tournament profile which tracks their history and statistics. Brackit allows for competitors to understand their performance across tournaments in a new way, allowing players to see their lifetime history against their historical opponents.
 % As a tournament organizer myself for Super Smash Bros. Melee, I have firsthand experienced the frustration stemming from the fact that competitors have limitted access to information during a tournament, and Brackit proposes to fix these problems by enabling players to have full access to the tournament bracket on their phones. Additionally, as a competitor, I have spent countless hours tabulating historical data from tournaments to get an idea of my historical results - Brackit solves this problem by centralizing tournaments on one platform, and handling data collection automatically. 
 
 
-
-\section*{Types of Users}
+% \clearpage
+\section*{User Types (UTs)}
 \begin{enumerate}
-    \item{Tournament organizers (TOs)}
-    \item{Tournament competitors}
-    \item{Spectators (Registered \texttt{Brackit} users that are neither 1. or 2.)}
-    \item{Guest Users (Unregistered \texttt{Brackit} users that are neither 1. or 2.)}
+    \item{\textit{Tournament organizers (TOs)}}: \\Create tournaments; Seed (rank) entrants once entrants have registered in bracket; 
+    Allow entrants to register in a bracket using their \texttt{brackit} account; Register Wins/Losses/Scores of competitors using \texttt{brackit};
+    Monitor historical records (tournaments created/past results);
+    % \begin{multicols}{2}
+    % \begin{itemize}
+    %     \item{create tournaments}
+    %     \item{seed (rank) entrants once entrants have registered in bracket}
+    %     \item{allow entrants to register in a bracket using their \texttt{brackit account}}
+        
+    % \end{itemize}
+    % \end{multicols}
+
+    \item{\textit{Tournament competitors}}: \\ Submit requests to participate in a TO's competition; Once accepted into a competition, can view 
+    the competition using \texttt{Brackit}; Monitor historical records (Wins/Losses/Scores);
+    \item{\textit{Spectators} (Registered \texttt{Brackit} users that are neither UT 1. or UT 2.):}
+    \\ Submit requests to view a TO's competition; Can view 
+    the competition using \texttt{Brackit}.
+    
+    \item{\textit{Guest Users} (Unregistered \texttt{Brackit} users that are neither UT 1. or UT 2.)}
+    \\ Submit requests to view a TO's competition; Can view 
+    the competition using \texttt{Brackit}.
 \end{enumerate}
 % \clearpage
 \section*{Functional Requirements (FR)}
@@ -119,7 +135,7 @@ Traditionally the only person with information about the ongoing tournament is t
 
     \item \textbf{\textit{Profile Creation/Maintenance}}
         \begin{enumerate}[label*=\arabic*.]
-            \item{Competitors and Organizers can create profiles which keep a history of:}\label{2.1}
+            \item{Competitors/Organizers can create profiles which keep a history of:}\label{2.1}
             \begin{enumerate}[label*=\arabic*.]
                 \item{tournaments entered and created, placement history}
                 \item{number of matches won/lost}
@@ -136,7 +152,7 @@ Traditionally the only person with information about the ongoing tournament is t
 
         \end{enumerate}
 
-    \item \textbf{\textit{Brackit Visualization}}
+    \item \textbf{\textit{Bracket Visualization}}
         \begin{enumerate}[label*=\arabic*.]
             \item{Users can access multiple views of brackets:} \label{4.1}
             \begin{enumerate}[label*=\arabic*.]
@@ -159,38 +175,57 @@ Traditionally the only person with information about the ongoing tournament is t
 
 \item \textbf{\textit{Screen Adaption}}
     \begin{enumerate}[label*=\arabic*.]
-    \item{Users able to visualize brackets in portrait and landscape modes}
+    \item{Users can visualize brackets in portrait and landscape modes}
     \end{enumerate}
 
-\item \textbf{\textit{Development Environment(s)} and Version Control}
-    \begin{enumerate}[label*=\arabic*.]
-        \item{\href{https://developer.android.com/studio}{Android Studio}}
-        \item{\href{https://code.visualstudio.com/}{Visual Studio Code}}
+% \item \textbf{\textit{Development Environment(s)} and Version Control}
+%     \begin{enumerate}[label*=\arabic*.]
+%         \item{\href{https://developer.android.com/studio}{Android Studio}}
+%         \item{\href{https://code.visualstudio.com/}{Visual Studio Code}}
+% %     \end{enumerate}
+
+% % \item \textbf{\textit{Version Control}}
+% %     \begin{enumerate}[label*=\arabic*.]
+%         \item{\href{https://github.com/}{GitHub}}
+%     \end{enumerate}    
+
+% \item \textbf{\textit{Languages/Frameworks}}
+%     \begin{enumerate}[label*=\arabic*.]
+%         \item{\href{https://facebook.github.io/react-native/}{React-Native}}
+%         \item{\href{https://www.python.org/}{Python}}
 %     \end{enumerate}
 
-% \item \textbf{\textit{Version Control}}
+% \item \textbf{\textit{Platform}}
 %     \begin{enumerate}[label*=\arabic*.]
-        \item{\href{https://github.com/}{GitHub}}
-    \end{enumerate}    
+%         \item{\href{https://www.android.com/}{Android}}
+%     \end{enumerate}
 
-\item \textbf{\textit{Languages/Frameworks}}
-    \begin{enumerate}[label*=\arabic*.]
-        \item{\href{https://facebook.github.io/react-native/}{React-Native}}
-        \item{\href{https://www.python.org/}{Python}}
-    \end{enumerate}
-
-\item \textbf{\textit{Platform}}
-    \begin{enumerate}[label*=\arabic*.]
-        \item{\href{https://www.android.com/}{Android}}
-    \end{enumerate}
-
-\item \textbf{\textit{Development Process}}
-    \begin{enumerate}[label*=\arabic*.]
-        \item{\href{https://agilemanifesto.org/}{Agile}}
-    \end{enumerate}
-
-
+% \item \textbf{\textit{Development Process}}
+%     \begin{enumerate}[label*=\arabic*.]
+%         \item{\href{https://agilemanifesto.org/}{Agile}}
+%     \end{enumerate}
+\item \textbf{\textit{Methodology}}
+\begin{center}
+    \begin{tabular}{ |p{75mm}|p{75mm}| }
+        \hline
+        \textbf{IDE and Version Control}  \newline
+        {\href{https://developer.android.com/studio}{Android Studio}},
+        {\href{https://code.visualstudio.com/}{Visual Studio Code}},
+        {\href{https://github.com/}{GitHub}}   & 
+        \textbf{Languages/Frameworks} \newline 
+        {\href{https://facebook.github.io/react-native/}{React-Native}},
+        {\href{https://www.python.org/}{Python}} \\
+        \hline
+        \textbf{Platform} \newline
+        {\href{https://www.android.com/}{Android}} & 
+        \textbf{Development Process} \newline
+        {\href{https://agilemanifesto.org/}{Agile}} \\
+        \hline
+    \end{tabular}
+\end{center}
 \end{enumerate}
+
+
 
 \section*{Detailed User Scenarios }
 
