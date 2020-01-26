@@ -5,3 +5,6 @@
     - [`Flask-SQLAlchemy`](https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/)
 # Achievements
 1) Completed Chapter 1-3 of the [`Flask` Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+2) Completed Chapter 3-5 of [`Flask` Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+3) Implemented templates and working endpoints for rudimentary user profile access.
+4) Implemented user registration, login functionalities. 
