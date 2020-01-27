@@ -8,3 +8,4 @@
 2) Completed Chapter 3-5 of [`Flask` Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
 3) Implemented templates and working endpoints for rudimentary user profile access.
 4) Implemented user registration, login functionalities. 
+5) Implemented user avatar, about-me backend functionalities.
