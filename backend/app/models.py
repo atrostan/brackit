@@ -75,7 +75,7 @@ class Round(db.Model):
         nullable=False)
 
     # 1 to many relationship between round and matches
-    rounds = db.relationship('Round', backref='bracket', lazy=True)
+    matches = db.relationship('Match', backref='bracket', lazy=True)
 
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
