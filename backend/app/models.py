@@ -44,6 +44,12 @@ class Tournament(db.Model):
     def __repr__(self):
         return f'<Tournament {self.tournament_name}>'
 
+
+class Bracket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bracket_type = db.Column(db.String(20))
+    entrants = db.relationship('User', backref='bracket', lazy=True)
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
