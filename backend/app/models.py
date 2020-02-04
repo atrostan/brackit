@@ -16,8 +16,7 @@ class User(UserMixin, db.Model):
 
     def avatar(self, size):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
-            digest, size)
+        return f'https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}'
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -26,7 +25,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return f'<User {self.username}>'
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,7 +34,15 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return '<Post {}>'.format(self.body)
+        return f'<Post {self.body}>'
+
+class Tournament(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_name = db.Column(db.String(64))
+    organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return f'<Tournament {self.tournament_name}>'
 
 @login.user_loader
 def load_user(id):
