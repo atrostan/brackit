@@ -7,9 +7,9 @@ from app.models import (
     User, 
 )
 
-def purge_model(Model):
+def purge(Model):
     [db.session.delete(row) for row in Model.query.all()]
 
-purge_model(User)
+purge(User)
 
 db.session.commit()

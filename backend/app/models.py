@@ -48,19 +48,20 @@ class Post(db.Model):
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tournament_name = db.Column(db.String(64))
+    n_entrants = db.Column(db.Integer)
+    name = db.Column(db.String(64))
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     # 1 to many relationship between tournament and bracket
     brackets = db.relationship('Bracket', backref='tournament', lazy=True)
-    def __repr__(self):
-        return f'<Tournament {self.tournament_name}>'
+    # def __repr__(self):
+    #     return f'<Tournament {self.name}>'
 
 class Bracket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bracket_type = db.Column(db.String(20))
     users = db.relationship('User', secondary=bracket_entrants, 
-        backref='bracket_users', lazy=True)
+        backref='bracket_users', lazy='select', passive_deletes=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'), 
         nullable=False)
 
@@ -72,7 +73,7 @@ class Round(db.Model):
     number = db.Column(db.Integer)
     winners = db.Column(db.Boolean)
     bracket_id = db.Column(db.Integer, db.ForeignKey('bracket.id'), 
-        nullable=False)
+        nullable=True)
 
     # 1 to many relationship between round and matches
     matches = db.relationship('Match', backref='bracket', lazy=True)
