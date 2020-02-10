@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app import login
 from hashlib import md5
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 
 # many to many relationship between User and Bracket
 bracket_entrants = db.Table('bracket_entrants',
@@ -23,8 +24,8 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     brackets = db.relationship('Bracket', secondary=bracket_entrants, 
         backref='user_brackets', lazy=True)
-    match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
-        nullable=True)
+    # match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
+    #     nullable=True)
 
     def avatar(self, size):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
@@ -81,7 +82,7 @@ class Round(db.Model):
         nullable=True)
 
     # 1 to many relationship between round and matches
-    matches = db.relationship('Match', backref='round', lazy=True)
+    # matches = db.relationship('Match', backref='round', lazy=True)
     def __repr__(self):
         return f'round {self.number} in bracket {self.bracket_id}'
 
@@ -89,14 +90,26 @@ class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # 1 to many relationship between match and users
-    users = db.relationship('User', backref='match', lazy=True)
+
+    user_1 = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_2 = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
     round_id = db.Column(db.Integer, db.ForeignKey('round.id'),
         nullable=False)
-    # round = db.relationship('Round')
+
+    u1 = db.relationship("User", foreign_keys='Match.user_1')
+    u2 = db.relationship("User", foreign_keys='Match.user_2')
 
     def __repr__(self):
-        return f'<match w/ users {[u for u in self.users]}>'
+        return f'<match between {self.user_1} and {self.user_2}>'
 
+
+# marshmellow schemas (needed to de/serialize to json)
+class UserSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+        include_relationships = True
+        load_instance = True  # Optional: deserialize to model instances
 
 @login.user_loader
 def load_user(id):
