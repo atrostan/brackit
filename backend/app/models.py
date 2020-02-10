@@ -5,6 +5,14 @@ from flask_login import UserMixin
 from app import login
 from hashlib import md5
 
+# many to many relationship between User and Bracket
+bracket_entrants = db.Table('bracket_entrants',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
+        primary_key=True), 
+    db.Column('bracket_id', db.Integer, db.ForeignKey('bracket.id'),
+        primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -13,6 +21,10 @@ class User(UserMixin, db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    brackets = db.relationship('Bracket', secondary=bracket_entrants, 
+        backref='user_brackets', lazy=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
+        nullable=True)
 
     def avatar(self, size):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
@@ -38,17 +50,53 @@ class Post(db.Model):
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tournament_name = db.Column(db.String(64))
+    n_entrants = db.Column(db.Integer)
+    name = db.Column(db.String(64))
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __repr__(self):
-        return f'<Tournament {self.tournament_name}>'
-
+    # 1 to many relationship between tournament and bracket
+    brackets = db.relationship('Bracket', backref='tournament', lazy=True)
+    # def __repr__(self):
+    #     return f'<Tournament {self.name}>'
 
 class Bracket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bracket_type = db.Column(db.String(20))
-    entrants = db.relationship('User', backref='bracket', lazy=True)
+    users = db.relationship('User', secondary=bracket_entrants, 
+        backref='bracket_users', lazy='select', passive_deletes=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'), 
+        nullable=False)
+
+    # 1 to many relationship between bracket and rounds
+    rounds = db.relationship('Round', backref='bracket', lazy=True)
+
+    def __repr__(self):
+        return f'<{self.bracket_type} bracket: tournament {self.tournament_id}>'
+
+class Round(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.Integer)
+    winners = db.Column(db.Boolean)
+    bracket_id = db.Column(db.Integer, db.ForeignKey('bracket.id'), 
+        nullable=True)
+
+    # 1 to many relationship between round and matches
+    matches = db.relationship('Match', backref='round', lazy=True)
+    def __repr__(self):
+        return f'round {self.number} in bracket {self.bracket_id}'
+
+class Match(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # 1 to many relationship between match and users
+    users = db.relationship('User', backref='match', lazy=True)
+    round_id = db.Column(db.Integer, db.ForeignKey('round.id'),
+        nullable=False)
+    # round = db.relationship('Round')
+
+    def __repr__(self):
+        return f'<match w/ users {[u for u in self.users]}>'
+
 
 @login.user_loader
 def load_user(id):
