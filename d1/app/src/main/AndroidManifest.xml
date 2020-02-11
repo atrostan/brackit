@@ -13,6 +13,9 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.example.d1.login.LoginActivity">
+    </activity>
+        <activity
+                android:name="com.example.d1.tournament.TournamentActivity">
         </activity>
         <activity
             android:name=".MainActivity"

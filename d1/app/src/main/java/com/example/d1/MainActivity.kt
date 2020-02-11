@@ -77,7 +77,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         list.adapter = listAdapter
 
         list.setOnItemClickListener { parent, view, position, id ->
+            println("------------------------")
             Toast.makeText(this, "You Clicked at " +web[+ position], Toast.LENGTH_SHORT).show();
+            val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
+            //can pass any data
+            intent.putExtra("STRING_I_NEED",web[+position])
+            startActivity(intent)
+            finish()
         }
 
 //        val factory:LayoutInflater= layoutInflater;
