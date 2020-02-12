@@ -82,38 +82,28 @@ class Round(db.Model):
         nullable=True)
 
     # 1 to many relationship between round and matches
-    # matches = db.relationship('Match', backref='round', lazy=True)
+    matches = db.relationship('Match', backref='round', lazy=True)
     def __repr__(self):
         return f'round {self.number} in bracket {self.bracket_id}'
-
-# match_to_match = db.Table('match_to_match',
-#     db.Column('winner_to_id', db.Integer, db.ForeignKey('match.id'),
-#         primary_key=True),
-#     db.Column('loser_to_id', db.Integer, db.ForeignKey('match.id'),
-#         primary_key=True)
-# )
 
 class Match(db.Model):
     __tablename__  = 'match'
     id = db.Column(db.Integer, primary_key=True)
 
-    # 1 to many relationship between match and users
+    # 1 to 2 relationship between match and users
+    user_1 = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_1_score = db.Column(db.Integer)
 
-    user_1 = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user_2 = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_2 = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_2_score = db.Column(db.Integer)
+
+    # match winner - if None, match is ongoing
+    winner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     round_id = db.Column(db.Integer, db.ForeignKey('round.id'),
         nullable=False)
 
     # self refer to next match for winner and loser
-
-    # winner_advance_to = db.relationship(
-    #     'Match',
-    #     secondary='match_to_match',
-    #     primary_join='Node.id == match_to_match.c.winner_to_id',
-    #     secondary_join='Node.id==match_to_match.c.winner_to_id',
-    # )
-
     winner_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
     loser_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
 
@@ -128,29 +118,16 @@ class Match(db.Model):
         primaryjoin="Match.loser_advance_to==remote(Match.id)",
         uselist=False 
     )
-    # child = db.relationship("Node", primary_join="Node.id==remote(Node.parent_id)", uselist=False)
-
-
-    # winner_to = db.relationship('Match', remote_side=[id], 
-    #     backref='winner_advanced_from')
-
-    # loser_to = db.relationship('Match', remote_side=[id], 
-    #     backref='loser_advanced_from')
 
     u1 = db.relationship("User", foreign_keys='Match.user_1')
     u2 = db.relationship("User", foreign_keys='Match.user_2')
+    match_winner = db.relationship('User', foreign_keys='Match.winner')
 
     def __repr__(self):
-        return f'<match between {self.user_1} and {self.user_2}>'
-
-class Node(db.Model):
-    __tablename__ = 'node'
-    id = db.Column(db.Integer, primary_key=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey('node.id'))
-    data = db.Column(db.String(50))
-    parent = db.relationship("Node", remote_side=[id])
+        return f'<match {self.id} between {self.user_1} and {self.user_2}>'
 
 # marshmellow schemas (needed to de/serialize to json)
+
 class UserSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = User
