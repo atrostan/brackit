@@ -10,16 +10,27 @@ from app.forms import (
     EditProfileForm,
     LoginForm
 )
+
 from flask_login import (
     current_user, 
     login_required,
     login_user, 
     logout_user, 
 )
+
 from app.models import (
+    Bracket,
+    BracketSchema,
+    Match,
+    MatchSchema,
+    Round, 
+    RoundSchema,
+    Tournament, 
+    TournamentSchema,
     User, 
     UserSchema,
 )
+
 from flask import request
 from werkzeug.urls import url_parse
 from app import db
@@ -119,3 +130,30 @@ def user(id):
     dump_data = user_schema.dump(user)
     return dump_data
 
+@app.route('/tournament/<id>')
+def tournament(id):
+    tournament_schema = TournamentSchema()
+    tournament = Tournament.query.filter_by(id=id).first_or_404()
+    dump_data = tournament_schema.dump(tournament)
+    return dump_data
+
+@app.route('/bracket/<id>')
+def bracket(id):
+    bracket_schema = BracketSchema()
+    bracket = Bracket.query.filter_by(id=id).first_or_404()
+    dump_data = bracket_schema.dump(bracket)
+    return dump_data
+
+@app.route('/round/<id>')
+def round(id):
+    round_schema = RoundSchema()
+    round = Round.query.filter_by(id=id).first_or_404()
+    dump_data = round_schema.dump(round)
+    return dump_data
+
+@app.route('/match/<id>')
+def match(id):
+    match_schema = MatchSchema()
+    match = Match.query.filter_by(id=id).first_or_404()
+    dump_data = match_schema.dump(match)
+    return dump_data

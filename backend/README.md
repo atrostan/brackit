@@ -1,9 +1,4 @@
-# Instructions
 
-1) install [conda](https://docs.conda.io/en/latest/)
-2) `conda env create -f env.yml`
-3) `conda activate flask_3004`
-4) `python -m flask run`
 
 # Update DB
 
@@ -22,3 +17,17 @@ python -m flask db migrate -m "commit message"
 python -m flask db upgrade
 
 ```
+
+# Populate DB
+
+1) Open `mock_populate.ipynb`
+2) `Run -> Restart Kernel and Run All Cells`  
+
+`TODO`- add `.py` that does this &#8593;
+
+# Instructions
+
+1) install [conda](https://docs.conda.io/en/latest/)
+2) `conda env create -f env.yml`
+3) `conda activate flask_3004`
+4) `python -m flask run`
