@@ -4,7 +4,7 @@ import math
 
 
 class BracketTypes(Enum):
-    DOUBLEELIMINATION = 1
+    DOUBLE_ELIMINATION = 1
 
 
 class Tournament:
@@ -18,7 +18,7 @@ class Tournament:
         # convert a list of tuples (competitor name, seed) to an ordered
         # list to be consumed by Bracket constructor
         if len(entrants) > 0:
-            if entrants[0] == tuple:
+            if type(entrants[0]) == tuple:
                 entrants = [t[0] for t in sorted(entrants, key=lambda x: x[1])]
 
         self.bracket = Bracket(entrants, bracketType)
@@ -29,7 +29,7 @@ class Bracket:
         self.entrants = entrants
         self.bracketType = bracketType
         self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
-        if (bracketType == BracketTypes.DOUBLEELIMINATION):
+        if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
 
     def makeDoubleElimBracket(self):
