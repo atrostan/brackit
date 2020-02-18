@@ -1,12 +1,11 @@
-class Entrant: 
-    def __init__(self, profile, seed):
-        self.profile = profile
-        self.seed = seed
-    
-    def __init__(self, tag, seed):
-        self.profile = Profile(tag)
-        self.seed = seed
-
-class Profile: 
-    def __init__(self, tag):
-        self.tag = tag
+class User: 
+    def __init__(self, username, email, password_hash, posts, about_me, last_seen, brackets):
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+        self.posts = posts
+        self.about_me = about_me
+        self.last_seen = last_seen
+        self.brackets = brackets
+    def __init__(self, username):
+        self.username = username

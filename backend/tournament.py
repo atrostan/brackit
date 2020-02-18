@@ -1,5 +1,5 @@
 from enum import Enum
-from player import Entrant, Profile
+from player import User
 import math
 
 class BracketTypes(Enum):
@@ -9,6 +9,8 @@ class BracketTypes(Enum):
 class Tournament:
     def __init__(self, bracket):
         self.bracket = bracket
+
+    ## expects an ordered list, where entry 0 of the list is the top seed and the last entry is the bottom seed
     def __init__(self, entrants, bracketType):
         self.bracket = Bracket(entrants, bracketType)
 
@@ -47,7 +49,6 @@ class Bracket:
 
         for i in range(0, len(self.rounds)):
             self.rounds[i].handleProgression()
-        print("nice")
 class Round:
     def __init__(self, roundNumber, bracket, numMatches, isWinners):
         self.roundNumber = roundNumber
