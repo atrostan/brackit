@@ -29,23 +29,28 @@ class Tournament:
 
         self.bracket = Bracket(entrants, bracketType)
 
-    def push_to_db(self, t_name, TO):
+    def post_to_db(self, tournament_name, TO):
         """push tournament to db
         
         Arguments:
-            t_name {string} -- tournament name
+            tournament_name {string} -- tournament name
             TO {string} -- name of tournament organizer
         """
+
         # tournament organizer id
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
 
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
-            name = t_name,
+            name = tournament_name,
             organizer_id = o_id
         )
 
         db.session.add(t_model)
+        
+        # post this tournament's bracket to db
+        self.bracket.post_to_db(t_model)
+
         db.session.commit()
         return
 
@@ -57,6 +62,21 @@ class Bracket:
         self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
         if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
+
+    def post_to_db(self, tournament_model):
+        u_models = \
+            [UserModel.query.filter_by(username=u).first_or_404() for u \
+            in self.entrants]
+        
+        b_model = BracketModel(
+            bracket_type=self.bracketType.name,
+            users=u_models,
+            tournament=tournament_model,
+        )
+
+        db.session.add(b_model)
+        return
+        
 
     def makeDoubleElimBracket(self):
         # grand finals + reset round
