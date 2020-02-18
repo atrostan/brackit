@@ -1,7 +1,13 @@
 from enum import Enum
 from player import User
+from app import db
 import math
 
+from app.models import Tournament as TournamentModel
+from app.models import Bracket as BracketModel
+from app.models import Match as MatchModel
+from app.models import Round as RoundModel
+from app.models import User as UserModel
 
 class BracketTypes(Enum):
     DOUBLE_ELIMINATION = 1
@@ -22,6 +28,26 @@ class Tournament:
                 entrants = [t[0] for t in sorted(entrants, key=lambda x: x[1])]
 
         self.bracket = Bracket(entrants, bracketType)
+
+    def push_to_db(self, t_name, TO):
+        """push tournament to db
+        
+        Arguments:
+            t_name {string} -- tournament name
+            TO {string} -- name of tournament organizer
+        """
+        # tournament organizer id
+        o_id = UserModel.query.filter_by(username=TO).first_or_404().id
+
+        t_model = TournamentModel(
+            n_entrants = len(self.bracket.entrants),
+            name = t_name,
+            organizer_id = o_id
+        )
+
+        db.session.add(t_model)
+        db.session.commit()
+        return
 
 
 class Bracket:
