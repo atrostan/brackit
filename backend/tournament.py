@@ -46,12 +46,11 @@ class Tournament:
             organizer_id = o_id
         )
 
-        db.session.add(t_model)
+        db.session.add(t_model); db.session.commit()
         
         # post this tournament's bracket to db
         self.bracket.post_to_db(t_model)
 
-        db.session.commit()
         return
 
 
@@ -74,7 +73,11 @@ class Bracket:
             tournament=tournament_model,
         )
 
-        db.session.add(b_model)
+        db.session.add(b_model); db.session.commit()
+
+        for round in self.rounds:
+            round.post_to_db(b_model) 
+
         return
         
 
@@ -136,8 +139,25 @@ class Round:
             else:
                 self.matches.append(Match(None, None, self))
 
-    def handleProgression(self):
+    def post_to_db(self, bracket_model):
+        # post the round object without the reference to the matches fk
+        r_model = RoundModel(
+            number=self.number,
+            winners=self.isWinners,
+            bracket=bracket_model
+        )
 
+        db.session.add(r_model); db.session.commit()
+
+        # post all the round's matches  
+        for match in self.matches:
+            match.post_to_db(r_model)
+
+        # now reference all of the round's matches in matches foreign key 
+        return
+
+
+    def handleProgression(self):
         if (self.number == self.bracket.numWinnersRounds and 
             self.isWinners == True):
             return
@@ -207,6 +227,27 @@ class Match:
         self.entrant1 = entrant1
         self.entrant2 = entrant2
         self.matchRound = matchRound
+
+    def post_to_db(self, round_model):
+
+        u1_query = UserModel.query.filter_by(username=self.entrant1).first()
+        u2_query = UserModel.query.filter_by(username=self.entrant2).first()
+
+        u1_id = u1_query.id if u1_query is not None else None
+        u2_id = u2_query.id if u2_query is not None else None
+        r_id = round_model.id
+
+        m_model = MatchModel(
+            user_1 = u1_id,
+            user_2 = u2_id,
+            winner = None,
+            round_id = r_id,
+            # winner_advance_to = self.winnerPlaysInMatch
+            # loser_advance_to = self.winnerPlaysInMatch
+        )
+
+        db.session.add(m_model); db.session.commit()
+        return
 
     def winnerPlaysInMatch(self, nextMatch):
         self.winnerPlaysInMatch = nextMatch
