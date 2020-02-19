@@ -114,14 +114,14 @@ class Bracket:
 
 
 class Round:
-    def __init__(self, roundNumber, bracket, numMatches, isWinners):
-        self.roundNumber = roundNumber
+    def __init__(self, number, bracket, numMatches, isWinners):
+        self.number = number
         self.bracket = bracket
         self.matches = []
         self.isWinners = isWinners
         self.numMatches = numMatches
         for i in range(0, self.numMatches):
-            if roundNumber == 1 and isWinners == True:
+            if number == 1 and isWinners == True:
                 if (len(self.bracket.entrants) < self.bracket.ceilPlayers - i):
                     self.matches.append(
                         Match(self.bracket.entrants[i], None, self))
@@ -138,11 +138,11 @@ class Round:
 
     def handleProgression(self):
 
-        if (self.roundNumber == self.bracket.numWinnersRounds and 
+        if (self.number == self.bracket.numWinnersRounds and 
             self.isWinners == True):
             return
 
-        elif (self.roundNumber == self.bracket.numWinnersRounds-1 and 
+        elif (self.number == self.bracket.numWinnersRounds - 1 and 
                 self.isWinners == True):
             # TODO insert logic for grand finals reset
             return
@@ -150,14 +150,14 @@ class Round:
         for i in range(0, len(self.matches)):
 
             if (self.isWinners == True):
-                r_idx = self.roundNumber # round index
+                r_idx = self.number # round index
                 m_idx = int(math.floor(i / 2)) # match index
                 self.matches[i].winnerPlaysInMatch(
                     self.bracket.rounds[r_idx].matches[m_idx]
                 )
                 # TODO implement double jeopardy avoidance (https://blog.smash.gg/changes-in-the-world-of-brackets-695ecb777a4c)
                 
-                if self.roundNumber == 1:
+                if self.number == 1:
                     r_idx = self.bracket.numWinnersRounds
                     m_idx = int(math.floor(i / 2))
                     self.matches[i].loserPlaysInMatch(
@@ -167,7 +167,7 @@ class Round:
                 else:
                     r_idx = \
                         self.bracket.numWinnersRounds + \
-                        (self.roundNumber - 1) * 2 - 1
+                        (self.number - 1) * 2 - 1
                     m_idx = i
                     # should work, but no dj avoidance
                     self.matches[i].loserPlaysInMatch(
@@ -178,7 +178,7 @@ class Round:
             if (self.isWinners == False):
                 ## place winner of losers finals in grand finals
 
-                if self.roundNumber == self.bracket.numLosersRounds:
+                if self.number == self.bracket.numLosersRounds:
                     r_idx = self.bracket.numWinnersRounds
                     m_idx = i
                     self.matches[i].winnerPlaysInMatch(
@@ -186,8 +186,8 @@ class Round:
 
                 # if next round has the same number of matches as the current 
                 # round
-                elif self.roundNumber % 2 == 1:
-                    r_idx = self.bracket.numWinnersRounds + self.roundNumber
+                elif self.number % 2 == 1:
+                    r_idx = self.bracket.numWinnersRounds + self.number
                     m_idx = i
                     self.matches[i].winnerPlaysInMatch(
                         self.bracket.rounds[r_idx].matches[m_idx])
@@ -195,7 +195,7 @@ class Round:
                 # if next round plays opponents from the winners bracket aka if 
                 # next round in losers bracket has less matches than this round
                 else:
-                    r_idx = self.bracket.numWinnersRounds + self.roundNumber
+                    r_idx = self.bracket.numWinnersRounds + self.number
                     m_idx = int(math.floor(i/2))
                     self.matches[i].winnerPlaysInMatch(
                         self.bracket.rounds[r_idx].matches[m_idx]
