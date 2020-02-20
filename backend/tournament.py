@@ -9,6 +9,8 @@ from app.models import Match as MatchModel
 from app.models import Round as RoundModel
 from app.models import User as UserModel
 
+import uuid
+
 class BracketTypes(Enum):
     DOUBLE_ELIMINATION = 1
 
@@ -77,6 +79,7 @@ class Bracket:
 
         for round in self.rounds:
             round.post_to_db(b_model) 
+
 
         return
         
@@ -152,6 +155,10 @@ class Round:
         # post all the round's matches  
         for match in self.matches:
             match.post_to_db(r_model)
+        
+        # post all the self references winner/loserPlaysInMatch
+        # for match in self.matches:
+        #     match.post_self_refs(r_model)
 
         # now reference all of the round's matches in matches foreign key 
         return
@@ -227,9 +234,10 @@ class Match:
         self.entrant1 = entrant1
         self.entrant2 = entrant2
         self.matchRound = matchRound
+        self.uuid = str(uuid.uuid4())
 
     def post_to_db(self, round_model):
-
+    
         u1_query = UserModel.query.filter_by(username=self.entrant1).first()
         u2_query = UserModel.query.filter_by(username=self.entrant2).first()
 
@@ -242,12 +250,38 @@ class Match:
             user_2 = u2_id,
             winner = None,
             round_id = r_id,
-            # winner_advance_to = self.winnerPlaysInMatch
-            # loser_advance_to = self.winnerPlaysInMatch
+            uuid = self.uuid,
+            # winner_advance_to = winner_match_id,
+            # loser_advance_to = loser_match_id
         )
 
         db.session.add(m_model); db.session.commit()
         return
+
+    def post_self_refs(self,):
+        winner_match_id = None
+        loser_match_id = None
+        if type(self.winnerPlaysInMatch) == Match:
+            w_query = MatchModel \
+                        .query \
+                        .filter_by(uuid=self.winnerPlaysInMatch.uuid) \
+                        .first()
+
+
+            if w_query is not None: winner_match_id = w_query.id 
+
+        if type(self.loserPlaysInMatch) == Match:
+            uuid = self.loserPlaysInMatch.uuid
+            l_query = MatchModel \
+                        .query \
+                        .filter_by(uuid=uuid) \
+                        .first()
+            if l_query is not None: loser_match_id = l_query.id  
+
+        match = MatchModel.query.filter_by(uuid=self.uuid).first()
+        match.winner_advance_to = winner_match_id
+        match.loser_advance_to = loser_match_id
+        db.session.commit()
 
     def winnerPlaysInMatch(self, nextMatch):
         self.winnerPlaysInMatch = nextMatch
