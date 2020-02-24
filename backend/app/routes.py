@@ -1,4 +1,5 @@
 from flask import (
+    abort,
     flash, 
     redirect, 
     render_template, 
@@ -76,23 +77,25 @@ def index():
     ]
     return render_template("index.html", title='Home Page', posts=posts)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
-        return redirect(next_page)
-    # return jsonify(form.)
-    return render_template('login.html', title='Sign In', form=form)
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('index'))
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         user = User.query.filter_by(username=form.username.data).first()
+#         if user is None or not user.check_password(form.password.data):
+#             flash('Invalid username or password')
+#             return redirect(url_for('login'))
+#         login_user(user, remember=form.remember_me.data)
+#         next_page = request.args.get('next')
+#         if not next_page or url_parse(next_page).netloc != '':
+#             next_page = url_for('index')
+#         return redirect(next_page)
+#     # return jsonify(form.)
+#     return render_template('login.html', title='Sign In', form=form)
+
+
 
 @app.route('/logout')
 def logout():
@@ -123,35 +126,50 @@ def register():
 #     ]
 #     return render_template('user.html', user=user, posts=posts)
 
-@app.route('/user/<id>')
+# register user endpt
+@app.route('/api/users', methods = ['POST'])
+def new_user():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if username is None or password is None:
+        abort(400) # missing arguments
+    if User.query.filter_by(username = username).first() is not None:
+        abort(400) # existing user
+    user = User(username = username)
+    user.hash_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({ 'username': user.username }), 201, {'Location': url_for('user', id = user.id, _external = True)}
+
+@app.route('/api/user/<id>')
 def user(id):
     user_schema = UserSchema()
     user = User.query.filter_by(id=id).first_or_404()
     dump_data = user_schema.dump(user)
     return dump_data
 
-@app.route('/tournament/<id>')
+@app.route('/api/tournament/<id>')
 def tournament(id):
     tournament_schema = TournamentSchema()
     tournament = Tournament.query.filter_by(id=id).first_or_404()
     dump_data = tournament_schema.dump(tournament)
     return dump_data
 
-@app.route('/bracket/<id>')
+@app.route('/api/bracket/<id>')
 def bracket(id):
     bracket_schema = BracketSchema()
     bracket = Bracket.query.filter_by(id=id).first_or_404()
     dump_data = bracket_schema.dump(bracket)
     return dump_data
 
-@app.route('/round/<id>')
+@app.route('/api/round/<id>')
 def round(id):
     round_schema = RoundSchema()
     round = Round.query.filter_by(id=id).first_or_404()
     dump_data = round_schema.dump(round)
     return dump_data
 
-@app.route('/match/<id>')
+@app.route('/api/match/<id>')
 def match(id):
     match_schema = MatchSchema()
     match = Match.query.filter_by(id=id).first_or_404()
