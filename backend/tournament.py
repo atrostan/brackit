@@ -12,7 +12,7 @@ from app.models import User as UserModel
 import uuid
 
 class BracketTypes(Enum):
-    DOUBLEELIMINATION = 1
+    DOUBLE_ELIMINATION = 1
 
 
 class Tournament:
@@ -20,12 +20,10 @@ class Tournament:
         self.tournament_name = tournament_name
         self.organizer = organizer
         self.bracket = bracket
-        self.post_to_db()
 
     # expects an list of tuples for entrants (competitor name, seed)
     def __init__(self, tournament_name, organizer, entrants, bracketType):
         self.tournament_name = tournament_name
-        self.organizer = organizer
         # convert a list of tuples (competitor name, seed) to an ordered
         # list to be consumed by Bracket constructor
         if len(entrants) > 0:
@@ -33,7 +31,10 @@ class Tournament:
                 entrants = [t[0] for t in sorted(entrants, key=lambda x: x[1])]
 
         self.bracket = Bracket(entrants, bracketType)
-        self.post_to_db()
+        if organizer is None:
+            self.organizer = self.bracket.entrants[0]
+        else:
+            self.organizer = organizer
 
     def post_to_db(self):
         """push tournament to db
@@ -44,7 +45,7 @@ class Tournament:
         """
 
         # tournament organizer id
-        o_id = UserModel.query.filter_by(username=self.organizer).first_or_404().id
+        o_id = UserModel.query.filter_by(username=self.organizer.username).first_or_404().id
 
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
@@ -70,7 +71,7 @@ class Bracket:
 
     def post_to_db(self, tournament_model):
         u_models = \
-            [UserModel.query.filter_by(username=u).first_or_404() for u \
+            [UserModel.query.filter_by(username=u.username).first_or_404() for u \
             in self.entrants]
         
         b_model = BracketModel(
@@ -173,30 +174,30 @@ class Round:
         for i in range(0, len(self.matches)):
 
             if (self.isWinners == True):
-                self.bracket.rounds[self.roundNumber].matches[int(math.floor(i/2))].setEntrant(self.matches[i].winner)
+                self.bracket.rounds[self.number].matches[int(math.floor(i/2))].setEntrant(self.matches[i].winner)
                 # TODO implement double jeopardy avoidance (https://blog.smash.gg/changes-in-the-world-of-brackets-695ecb777a4c)
-                if self.roundNumber == 1:
+                if self.number == 1:
                     self.bracket.rounds[self.bracket.numWinnersRounds].matches[int(math.floor(i/2))].setEntrant(self.matches[i].loser) 
                 else:
                     # should work, but no dj avoidance
-                    self.bracket.rounds[self.bracket.numWinnersRounds + (self.roundNumber-1)*2 - 1].matches[i].setEntrant(self.matches[i].loser)
+                    self.bracket.rounds[self.bracket.numWinnersRounds + (self.number-1)*2 - 1].matches[i].setEntrant(self.matches[i].loser)
                     #placeInLosers += 2
 
             if (self.isWinners == False):
                 ## place winner of losers finals in grand finals
-                if self.roundNumber == self.bracket.numLosersRounds:
+                if self.number == self.bracket.numLosersRounds:
                     self.bracket.rounds[self.bracket.numWinnersRounds-2].matches[i].setEntrant(self.matches[i].winner)
                 ##if next round has the same number of matches as the current round
-                elif self.roundNumber%2 == 1:
-                    self.bracket.rounds[self.bracket.numWinnersRounds + self.roundNumber].matches[i].setEntrant(self.matches[i].winner)
+                elif self.number%2 == 1:
+                    self.bracket.rounds[self.bracket.numWinnersRounds + self.number].matches[i].setEntrant(self.matches[i].winner)
                 ##if next round plays opponents from the winners bracket aka if next round in losers bracket has less matches than this round
                 else:
-                    self.bracket.rounds[self.bracket.numWinnersRounds + self.roundNumber].matches[int(math.floor(i/2))].setEntrant(self.matches[i].winner)
+                    self.bracket.rounds[self.bracket.numWinnersRounds + self.number].matches[int(math.floor(i/2))].setEntrant(self.matches[i].winner)
 
 class Match:
     def __init__(self, entrant1, entrant2, matchRound, matchNumber):
-        self.entrant1 = entrant1
-        self.entrant2 = entrant2
+        self.entrant1 = [entrant1]
+        self.entrant2 = [entrant2]
         self.matchRound = matchRound
         self.matchNumber = matchNumber
         # Winner/loser/entrants put as lists because we need to copy the address of the list itself,
@@ -207,18 +208,27 @@ class Match:
 
     def post_to_db(self, round_model):
     
-        u1_query = UserModel.query.filter_by(username=self.entrant1).first()
-        u2_query = UserModel.query.filter_by(username=self.entrant2).first()
+        
+        u1_query = UserModel.query.filter_by(username=self.entrant1[0].username).first() if self.entrant1[0] is not None else None
+        u2_query = UserModel.query.filter_by(username=self.entrant2[0].username).first() if self.entrant2[0] is not None else None
 
+        winner_query = UserModel.query.filter_by(username=self.winner[0].username).first() if self.winner[0] is not None else None
+        loser_query = UserModel.query.filter_by(username=self.loser[0].username).first() if self.loser[0] is not None else None
+       
         u1_id = u1_query.id if u1_query is not None else None
         u2_id = u2_query.id if u2_query is not None else None
+        
+        winner_id = winner_query.id if winner_query is not None else None
+        loser_id = loser_query.id if loser_query is not None else None
+
         r_id = round_model.id
 
         m_model = MatchModel(
             user_1 = u1_id,
             user_2 = u2_id,
-            winner = None,
-            round_id = r_id,
+            winner = winner_id,
+            loser = loser_id,
+            round_id = r_id
             # winner_advance_to = winner_match_id,
             # loser_advance_to = loser_match_id
         )
@@ -265,24 +275,20 @@ class Match:
         self.loser[0] = loser
 
     def entrantInMatch(self, entrant):
-        if self.entrant1 == entrant:
+        if self.entrant1[0] == entrant:
             return True
-        elif self.entrant2 == entrant:
+        elif self.entrant2[0] == entrant:
             return True
         else:
             return False
 
     def setEntrant(self, entrant):
-        if self.entrant1 == None:
-            self.entrant1 = entrant
-        elif self.entrant2 == None: 
-            self.entrant2 = entrant
-        elif self.entrant1[0] == None:
+        if self.entrant1[0] == None:
             self.entrant1[0] = entrant[0]
         elif self.entrant2[0] == None:
             self.entrant2[0] = entrant[0]
         else:
             if self.matchRound.isWinners:
-                print("The winners round/match " + str(self.matchRound.roundNumber) + "/" + str(self.matchNumber) + " that user " + entrant[0].username + " is trying to be added to is full! Error")
+                print("The winners round/match " + str(self.matchRound.number) + "/" + str(self.matchNumber) + " that user " + entrant[0].username + " is trying to be added to is full! Error")
             else:
-                print("The losers round/match " + str(self.matchRound.roundNumber) + "/" + str(self.matchNumber) + " that user " + entrant[0].username + " is trying to be added to is full! Error")
+                print("The losers round/match " + str(self.matchRound.number) + "/" + str(self.matchNumber) + " that user " + entrant[0].username + " is trying to be added to is full! Error")

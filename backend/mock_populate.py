@@ -26,6 +26,7 @@ from tournament import (
     Tournament,
     Match
 )
+from player import User
 
 
 # In[2]:
@@ -103,34 +104,33 @@ np.random.shuffle(seeds)
 
 # In[9]:
 
-
-tuple_list = [(usernames[i], seeds[i]) for i in range(N_COMPETITORS)]
+user_list = [User(usernames[i]) for i in range(N_COMPETITORS)]
+tuple_list = [(user_list[i], seeds[i]) for i in range(N_COMPETITORS)]
 
 
 # In[10]:
 
 
 btype = BracketTypes.DOUBLE_ELIMINATION
-t = Tournament(tuple_list, btype)
+tournament_name = 'Fall Charity LAN 2018 Melee Singles'
+t = Tournament(tournament_name, None, tuple_list, btype)
 
 
 # In[11]:
 
 
-tournament_name = 'Fall Charity LAN 2018 Melee Singles'
-TO = t.bracket.entrants[0]
 
 # initial post to db
-t.post_to_db(tournament_name, TO,)
+t.post_to_db()
 
 
 # In[12]:
 
 
 # post self references in matches separately
-for r in t.bracket.rounds:
-    for m in r.matches:
-        m.post_self_refs()
+# for r in t.bracket.rounds:
+#     for m in r.matches:
+#         m.post_self_refs()
 
 
 # In[13]:

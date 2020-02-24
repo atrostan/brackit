@@ -1,8 +1,8 @@
 """commit message
 
-Revision ID: 86a40ddf3fb7
+Revision ID: b5fdd61f14cc
 Revises: 
-Create Date: 2020-02-24 07:24:01.815518
+Create Date: 2020-02-24 13:08:36.030362
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '86a40ddf3fb7'
+revision = 'b5fdd61f14cc'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -76,15 +76,13 @@ def upgrade():
     sa.Column('user_2', sa.Integer(), nullable=True),
     sa.Column('user_2_score', sa.Integer(), nullable=True),
     sa.Column('winner', sa.Integer(), nullable=True),
+    sa.Column('loser', sa.Integer(), nullable=True),
     sa.Column('round_id', sa.Integer(), nullable=False),
-    sa.Column('winner_advance_to', sa.Integer(), nullable=True),
-    sa.Column('loser_advance_to', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['loser_advance_to'], ['match.id'], ),
+    sa.ForeignKeyConstraint(['loser'], ['user.id'], ),
     sa.ForeignKeyConstraint(['round_id'], ['round.id'], ),
     sa.ForeignKeyConstraint(['user_1'], ['user.id'], ),
     sa.ForeignKeyConstraint(['user_2'], ['user.id'], ),
     sa.ForeignKeyConstraint(['winner'], ['user.id'], ),
-    sa.ForeignKeyConstraint(['winner_advance_to'], ['match.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_match_uuid'), 'match', ['uuid'], unique=False)

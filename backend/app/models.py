@@ -110,27 +110,28 @@ class Match(db.Model):
 
 	# match winner - if None, match is ongoing
 	winner = db.Column(db.Integer, db.ForeignKey('user.id'))
+	loser = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 	round_id = db.Column(db.Integer, db.ForeignKey('round.id'),
                     nullable=False)
 
 	# self refer to next match for winner and loser
-	winner_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
-	loser_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
+	# winner_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
+	# loser_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
 
-	winner_to = db.relationship(
-		"Match",
-		primaryjoin="Match.winner_advance_to==remote(Match.id)",
-		uselist=False, 
-		post_update=True
-	)
+	# winner_to = db.relationship(
+		# "Match",
+		# primaryjoin="Match.winner_advance_to==remote(Match.id)",
+		# uselist=False, 
+		# post_update=True
+	# )
 
-	loser_to = db.relationship(
-		'Match',
-		primaryjoin="Match.loser_advance_to==remote(Match.id)",
-		uselist=False, 
-		post_update=True
-	)
+	# loser_to = db.relationship(
+	# 	'Match',
+	# 	primaryjoin="Match.loser_advance_to==remote(Match.id)",
+	# 	uselist=False, 
+	# 	post_update=True
+	# )
 
 	u1 = db.relationship("User", foreign_keys='Match.user_1')
 	u2 = db.relationship("User", foreign_keys='Match.user_2')
