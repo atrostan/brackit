@@ -6,6 +6,9 @@ from app import login
 from hashlib import md5
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
+
 # many to many relationship between User and Bracket
 bracket_entrants = db.Table('bracket_entrants',
                             db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
@@ -96,6 +99,7 @@ class Round(db.Model):
 class Match(db.Model):
 	__tablename__ = 'match'
 	id = db.Column(db.Integer, primary_key=True)
+	uuid = db.Column(db.Text(length=36), index=True)
 
 	# 1 to 2 relationship between match and users
 	user_1 = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -117,13 +121,15 @@ class Match(db.Model):
 	winner_to = db.relationship(
 		"Match",
 		primaryjoin="Match.winner_advance_to==remote(Match.id)",
-		uselist=False
+		uselist=False, 
+		post_update=True
 	)
 
 	loser_to = db.relationship(
 		'Match',
 		primaryjoin="Match.loser_advance_to==remote(Match.id)",
-		uselist=False
+		uselist=False, 
+		post_update=True
 	)
 
 	u1 = db.relationship("User", foreign_keys='Match.user_1')
