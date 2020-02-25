@@ -1,21 +1,26 @@
 from datetime import datetime
-from app import db
+from app import db, login, app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from app import login
 from hashlib import md5
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
 
+from itsdangerous import (
+    TimedJSONWebSignatureSerializer as Serializer, 
+    BadSignature, 
+    SignatureExpired
+)
+
 # many to many relationship between User and Bracket
 bracket_entrants = db.Table('bracket_entrants',
-                            db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
-                                    primary_key=True),
-                            db.Column('bracket_id', db.Integer, db.ForeignKey('bracket.id'),
-                                    primary_key=True)
-                            )
+							db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
+									primary_key=True),
+							db.Column('bracket_id', db.Integer, db.ForeignKey('bracket.id'),
+									primary_key=True)
+							)
 
 
 class User(UserMixin, db.Model):
@@ -27,7 +32,7 @@ class User(UserMixin, db.Model):
 	about_me = db.Column(db.String(140))
 	last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 	brackets = db.relationship('Bracket', secondary=bracket_entrants,
-                            backref='user_brackets', lazy=True)
+							backref='user_brackets', lazy=True)
 	# match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
 	#     nullable=True)
 
@@ -43,6 +48,22 @@ class User(UserMixin, db.Model):
 
 	def __repr__(self):
 		return f'<User {self.username}>'
+
+	def generate_auth_token(self, expiration=600):
+		s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
+		return s.dumps({'id': self.id})
+
+	@staticmethod
+	def verify_auth_token(token):
+		s = Serializer(app.config['SECRET_KEY'])
+		try:
+			data = s.loads(token)
+		except SignatureExpired:
+			return None # valid token, but expired
+		except BadSignature:
+			return None # invalid token
+		user = User.query.get(data['id'])
+		return user
 
 
 class Post(db.Model):
@@ -71,9 +92,9 @@ class Bracket(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	bracket_type = db.Column(db.String(20))
 	users = db.relationship('User', secondary=bracket_entrants,
-                        backref='bracket_users', lazy='select', passive_deletes=True)
+						backref='bracket_users', lazy='select', passive_deletes=True)
 	tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'),
-                        nullable=False)
+						nullable=False)
 
 	# 1 to many relationship between bracket and rounds
 	rounds = db.relationship('Round', backref='bracket', lazy=True)
@@ -87,7 +108,7 @@ class Round(db.Model):
 	number = db.Column(db.Integer)
 	winners = db.Column(db.Boolean)
 	bracket_id = db.Column(db.Integer, db.ForeignKey('bracket.id'),
-                        nullable=True)
+						nullable=True)
 
 	# 1 to many relationship between round and matches
 	matches = db.relationship('Match', backref='round', lazy=True)
@@ -112,7 +133,7 @@ class Match(db.Model):
 	winner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 	round_id = db.Column(db.Integer, db.ForeignKey('round.id'),
-                    nullable=False)
+					nullable=False)
 
 	# self refer to next match for winner and loser
 	winner_advance_to = db.Column(db.Integer, db.ForeignKey('match.id'))
