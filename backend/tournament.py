@@ -53,7 +53,7 @@ class Tournament:
         # post this tournament's bracket to db
         self.bracket.post_to_db(t_model)
 
-        return
+        return True
 
 
 class Bracket:
