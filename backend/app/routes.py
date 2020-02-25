@@ -38,6 +38,9 @@ from app import db
 from app.forms import RegistrationForm
 from datetime import datetime
 
+from flask_httpauth import HTTPBasicAuth
+auth = HTTPBasicAuth()
+
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
@@ -131,18 +134,19 @@ def register():
 def new_user():
     username = request.json.get('username')
     password = request.json.get('password')
+    email = request.json.get('email')
     if username is None or password is None:
         abort(400) # missing arguments
     if User.query.filter_by(username = username).first() is not None:
         abort(400) # existing user
-    user = User(username = username)
-    user.hash_password(password)
+    user = User(username = username, email=email)
+    user.set_password(password)
     db.session.add(user)
     db.session.commit()
-    return jsonify({ 'username': user.username }), 201, {'Location': url_for('user', id = user.id, _external = True)}
+    return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
 
-@app.route('/api/user/<id>')
-def user(id):
+@app.route('/api/user/<int:id>')
+def get_user(id):
     user_schema = UserSchema()
     user = User.query.filter_by(id=id).first_or_404()
     dump_data = user_schema.dump(user)
