@@ -98,6 +98,22 @@ payload = json.dumps({
     "seeds":seeds,
     "tournament_name":"Fall Charity LAN 2018 Melee Singles"
 })
+"""Payload looks like:{
+    "users": [
+        "TPN", 
+        "Ptolemy", 
+        "Spaceghost", 
+        "Kevin", 
+        "Burnaby", 
+        "AngryFalco", 
+        "Sunrisebanana", 
+        "Vik"
+    ], 
+    "seeds": [3, 5, 6, 2, 7, 8, 4, 1], 
+    "tournament_name": "Fall Charity LAN 2018 Melee Singles"
+}
+"""
+
 r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
 
 
