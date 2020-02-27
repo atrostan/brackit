@@ -1,7 +1,9 @@
 package com.example.d1
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import androidx.core.view.GravityCompat
 import androidx.appcompat.app.ActionBarDrawerToggle
 import android.view.MenuItem
@@ -14,10 +16,16 @@ import android.widget.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.widget.Toast
 import android.widget.LinearLayout
+import com.android.volley.toolbox.JsonObjectRequest
+import com.example.d1.dao.User
 import com.example.d1.login.LoginActivity
+import org.json.JSONObject
+import com.google.gson.Gson
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    private var LOG_IN = false
+    lateinit var user:User
 
     private lateinit var list: ListView;
     var web = arrayListOf<String>("Java",
@@ -56,6 +64,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        //reset header
+        resetHeader("Sign in","")
+
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
         val toggle = ActionBarDrawerToggle(
@@ -77,12 +88,41 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         list.adapter = listAdapter
 
         list.setOnItemClickListener { parent, view, position, id ->
+            println("------------------------")
             Toast.makeText(this, "You Clicked at " +web[+ position], Toast.LENGTH_SHORT).show();
+            val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
+            //can pass any data
+            intent.putExtra("STRING_I_NEED",web[+position])
+            startActivity(intent)
+            finish()
         }
 
-//        val factory:LayoutInflater= layoutInflater;
-//        var v1:View = factory.inflate(nav_header_before_login_main,null)
-//        onLogin(v1)
+
+        //after user login
+        if (intent.hasExtra("json")){
+            LOG_IN = true
+            var gson = Gson()
+            var userJson = JSONObject(intent.getStringExtra("json"))
+            println("=============login return"+userJson.toString())
+            var jsonString = userJson.toString()
+            user = gson.fromJson(jsonString,User::class.java)
+            println(user)
+            //set header with user name and email
+            resetHeader(user.username,user.email)
+            //set create tournament visible
+            var menu = navView.menu
+            var nav_cTournament = menu.findItem(R.id.nav_createTournament)
+            nav_cTournament.setVisible(true)
+
+            //userchange(user)
+        }
+    }
+
+    //after user login, set user info and functions
+    fun userchange(user:User){
+        var userName = findViewById<TextView>(R.id.login)
+        userName.text = user.username
+
     }
 
     override fun onBackPressed() {
@@ -107,6 +147,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_history -> {
                 textMessage.setText(R.string.menu_history)
             }
+            R.id.nav_createTournament -> {
+                textMessage.setText(R.string.create_tournament)
+                var gson=Gson();
+                var userString = gson.toJson(user)
+                val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
+                intent.putExtra("json",userString)
+                startActivityForResult(intent,0)
+                finish()
+            }
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         drawerLayout.closeDrawer(GravityCompat.START)
@@ -116,20 +165,47 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //works， got no idea why this version is working
     //after clicking go to a login page
     fun onLogin(v:View){
-        var layout:LinearLayout = v.findViewById(R.id.before_login_in)
-
-        layout.setOnClickListener { v ->
-            System.out.println("-----------------------------Befor Login in------------------------------")
-            var t: TextView = v!!.findViewById(R.id.login)
-            t.text = "newText"
-
-            val intent = intent.setClassName(this,"com.example.d1.login.LoginActivity")
+        if (!LOG_IN){
+            //var layout:LinearLayout = v.findViewById(R.id.before_login_in)
+            val intent = this.intent.setClassName(this,"com.example.d1.login.LoginActivity")
             //can pass any data
             //intent.putExtra()
             startActivity(intent)
             finish()
         }
 
+        //        layout.setOnClickListener { v ->
+//            System.out.println("-----------------------------Befor Login in------------------------------")
+//            var t: TextView = v!!.findViewById(R.id.login)
+//            t.text = "newText"
+//
+//            val intent = this.intent.setClassName(this,"com.example.d1.login.LoginActivity")
+//            //can pass any data
+//            //intent.putExtra()
+//            startActivity(intent)
+//            finish()
+//        }
+
+    }
+
+    //reset the header to default
+    fun resetHeader(n:String,e:String){
+        var navigationView = findViewById<NavigationView>(R.id.nav_view)
+        var header = navigationView.getHeaderView(0)
+        var username = header.findViewById<TextView>(R.id.username_nav)
+        var email = header.findViewById<TextView>(R.id.email_nav)
+
+
+        // var username_nav = LayoutInflater.from(this).inflate(R.layout.nav_header_main,null).findViewById<TextView>(R.id.username_nav)
+        // var email_nav = LayoutInflater.from(this).inflate(R.layout.nav_header_main,null).findViewById<TextView>(R.id.email_nav)
+
+
+        //name to empty string
+        username.text = n
+
+        //email to empty string
+        email.text = e
     }
 }
+
 
