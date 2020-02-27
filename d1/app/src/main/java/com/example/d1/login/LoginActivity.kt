@@ -13,14 +13,7 @@ import com.example.d1.R
 import android.widget.Toast
 import com.android.volley.toolbox.JsonObjectRequest
 import okhttp3.*
-//import com.android.volley.NetworkResponse;
-//import com.android.volley.ParseError;
-//import com.android.volley.Request;
-//import com.android.volley.Response;
-//import com.android.volley.Response.ErrorListener;
-//import com.android.volley.Response.Listener;
-//import com.android.volley.toolbox.HttpHeaderParser;
-//import org.w3c.dom.Text
+import org.json.JSONObject
 
 import java.io.IOException;
 
@@ -46,17 +39,6 @@ class LoginActivity : AppCompatActivity() {
             val passStr = password.text.toString()
 
             Okhttp(nameStr,passStr)
-//            val url = "https://jsonplaceholder.typicode.com/todos/1"
-//
-//            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
-//                Response.Listener { response ->
-//                    text.text = "Response: %s".format(response.toString())
-//                    print("-----------------------------------"+response.toString());
-//                },
-//                Response.ErrorListener { error ->
-//                    // TODO: Handle error
-//                }
-//            )
 
         }
 
@@ -66,10 +48,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun Okhttp(nameStr: String, passStr: String) {
-        run()
+        run(nameStr, passStr)
     }
 
-    fun run() {
+    fun run(nameStr: String, passStr: String) {
 //        val payload = "test payload"
 //
 //        val okHttpClient = OkHttpClient()
@@ -88,9 +70,9 @@ class LoginActivity : AppCompatActivity() {
 //            }
 //        })
         println("=========================================")
-        //http://10.0.2.2:5000/match/1
+        //http://10.0.2.2:5000/match/1 //android simulator should use 10.0.2.2 replace 127.0.0.1
         val request = Request.Builder()
-            .url("http://10.0.2.2:5000/match/1")
+            .url("http://10.0.2.2:5000/user/1")
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -100,13 +82,25 @@ class LoginActivity : AppCompatActivity() {
 
             }
 
+            //http response
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                    val text = findViewById<TextView>(R.id.textView2) as TextView
+                    val text = findViewById<TextView>(R.id.textView2)
+                    val json = JSONObject(response.body!!.string())
 
-                    println("========================================="+response.body!!.string())
-                    text.text = "Response: %s".format(response.toString())
+                    if (nameStr.isEmpty() && passStr.isEmpty()){
+                        // user has correct emial and password go back to homescreen
+
+                        val myIntent = Intent(applicationContext, MainActivity::class.java)
+                        //return user json
+                        myIntent.putExtra("json",json.toString())
+                        startActivityForResult(myIntent, 0)
+                        finish()
+                    }
+
+                    println("=========================================")
+                    text.text = "Response: "+json
 
                 }
             }

@@ -14,6 +14,7 @@
         <activity
             android:name="com.example.d1.login.LoginActivity">
     </activity>
+        <activity android:name="com.example.d1.tournament.CreateTournamentActivity"></activity>
         <activity
                 android:name="com.example.d1.tournament.TournamentActivity">
         </activity>
