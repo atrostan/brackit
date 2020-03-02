@@ -47,14 +47,14 @@ r = requests.post(url, data=payload, headers=headers)
 
 # post the rest of the users
 users = [
-    ('TPN', 'TPN@example.com'),
-    ('AngryFalco', 'AngryFalco@example.com'),
-    ('Sunrisebanana', 'Sunrisebanana@example.com'),
-    ('Ptolemy', 'Ptolemy@example.com'),
-    ('Vik', 'Vik@example.com'),
-    ('Kevin', 'Kevin@example.com'),
-    ('Spaceghost', 'Spaceghost@example.com'),
-    ('Burnaby', 'Burnaby@example.com'),
+    ('A', 'TPN@example.com'),
+    ('B', 'AngryFalco@example.com'),
+    ('C', 'Sunrisebanana@example.com'),
+    ('D', 'Ptolemy@example.com'),
+    ('E', 'Vik@example.com'),
+    ('F', 'Kevin@example.com'),
+    ('G', 'Spaceghost@example.com'),
+    ('H', 'Burnaby@example.com'),
 ]
 
 for username, email in users:
@@ -76,14 +76,14 @@ tkn = json.loads(r.content)['token']
 N_COMPETITORS = 8
 seeds = [i+1 for i in range(N_COMPETITORS)]
 usernames = [
-    'TPN',
-    'AngryFalco',
-    'Sunrisebanana',
-    'Ptolemy',
-    'Vik',
-    'Kevin',
-    'Spaceghost',
-    'Burnaby',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
 ]
 np.random.shuffle(usernames)
 np.random.shuffle(seeds)
@@ -98,8 +98,8 @@ payload = json.dumps({
     "seeds":seeds,
     "tournament_name":"Fall Charity LAN 2018 Melee Singles"
 })
-r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
-
+r = requests.post(url, data=payload, headers=headers, auth=("miguel", 'python'))
+print(r.content)
 
 # print all the tables for good measure
 

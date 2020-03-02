@@ -185,13 +185,13 @@ def create_tournament():
         t = Tournament(tuple_list, bracket_type)
 
         print(tuple_list)
-        t.post_to_db(tournament_name, TO)
+        t_id = t.post_to_db(tournament_name, TO)
 
         # post self references in matches separately
         for r in t.bracket.rounds:
             for m in r.matches:
                 m.post_self_refs()
-        return jsonify({'tournament': tournament_name})
+        return jsonify({'tournament_id': t_id})
     else:
         # return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
         return
