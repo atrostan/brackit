@@ -57,7 +57,27 @@ users = [
     ('H', 'Burnaby@example.com'),
 ]
 
+users2 = [
+    ('a', 'TPN@exale.com'),
+    ('b', 'AngryFao@example.com'),
+    ('c', 'Sunrisnana@example.com'),
+    ('d', 'Ptolemy@exmple.com'),
+    ('e', 'Vik@exple.com'),
+    ('f', 'Kevin@emple.com'),
+    ('g', 'Spacest@example.com'),
+    ('h', 'Burnaby@emple.com'),
+]
+
 for username, email in users:
+    payload = json.dumps({
+        "username":username,
+        "password":username.lower(),
+        "email":email.lower()
+    })
+
+    r = requests.post(url, data=payload, headers=headers)
+
+for username, email in users2:
     payload = json.dumps({
         "username":username,
         "password":username.lower(),
