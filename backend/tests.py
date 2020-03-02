@@ -12,7 +12,7 @@ class TestBracketCreation(unittest.TestCase):
         entrant6 = User("entrant6")
         entrant7 = User("entrant7")
         entrant8 = User("entrant8")
-        tournament = Tournament([entrant1, entrant2, entrant3, entrant4, entrant5, entrant6, entrant7, entrant8], BracketTypes.DOUBLEELIMINATION)
+        tournament = Tournament([entrant1, entrant2, entrant3, entrant4, entrant5, entrant6, entrant7], BracketTypes.DOUBLE_ELIMINATION)
 
         self.assertTrue(tournament.bracket.rounds[0].matches[0].entrant1 == entrant1)
         self.assertTrue(tournament.bracket.rounds[0].matches[0].loserPlaysInMatch == tournament.bracket.rounds[0].matches[1].loserPlaysInMatch)

@@ -32,6 +32,7 @@ class Tournament:
         self.bracket = Bracket(entrants, bracketType)
 
     def post_to_db(self, tournament_name, TO):
+
         """push tournament to db
         
         Arguments:
@@ -60,7 +61,7 @@ class Bracket:
     def __init__(self, entrants, bracketType):
         self.entrants = entrants
         self.bracketType = bracketType
-        self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
+        self.ceilPlayers = int(2**(math.ceil(math.log2(len(self.entrants)))))
         if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
 
@@ -225,7 +226,8 @@ class Round:
                     r_idx = self.bracket.numWinnersRounds + self.number
                     m_idx = int(math.floor(i/2))
                     self.matches[i].winnerPlaysInMatch(
-                        self.bracket.rounds[r_idx].matches[m_idx]
+                        self.bracket.rounds[r_idx]
+                            .matches[m_idx]
                     )
 
 
