@@ -47,14 +47,14 @@ r = requests.post(url, data=payload, headers=headers)
 
 # post the rest of the users
 users = [
-    ('TPN', 'TPN@example.com'),
-    ('AngryFalco', 'AngryFalco@example.com'),
-    ('Sunrisebanana', 'Sunrisebanana@example.com'),
-    ('Ptolemy', 'Ptolemy@example.com'),
-    ('Vik', 'Vik@example.com'),
-    ('Kevin', 'Kevin@example.com'),
-    ('Spaceghost', 'Spaceghost@example.com'),
-    ('Burnaby', 'Burnaby@example.com'),
+    ('a', 'TPN@example.com'),
+    ('b', 'AngryFalco@example.com'),
+    ('c', 'Sunrisebanana@example.com'),
+    ('d', 'Ptolemy@example.com'),
+    ('e', 'Vik@example.com'),
+    ('f', 'Kevin@example.com'),
+    ('g', 'Spaceghost@example.com'),
+    ('h', 'Burnaby@example.com'),
 ]
 
 for username, email in users:

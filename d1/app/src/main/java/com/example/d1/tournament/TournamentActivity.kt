@@ -23,7 +23,7 @@ import java.io.IOException
 
 
 class TournamentActivity : AppCompatActivity(){
-    val requestURL = "http://192.168.0.33:5000/api/"
+    val requestURL = "http://172.17.184.246:5000/api/"
     var userString = "nouser"
     var client = OkHttpClient()
     var currentRound = 0
@@ -72,24 +72,8 @@ class TournamentActivity : AppCompatActivity(){
             savedInstanceState.getSerializable("STRING_I_NEED") as String?
         }
 
-       // var text = findViewById<TextView>(R.id.name)
-       // text.setText(newString)
 
         getTournament(1)
-
-        println("====================onCreate=====================")
-        println(date+"------------date")
-        println(score+"------------date")
-        println(u1+"------------date")
-        println(u2+"------------date")
-
-        //set default bracket
-//        var listAdapter = BracketList(this,date,u1,score,u2)
-//        val list = findViewById<ListView>(R.id.list_tournament)
-//        list.adapter = listAdapter
-
-
-
 
         //navigate back
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

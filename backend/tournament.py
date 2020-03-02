@@ -41,7 +41,9 @@ class Tournament:
         """
 
         # tournament organizer id
+        print(TO)
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
+        print(o_id)
 
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
