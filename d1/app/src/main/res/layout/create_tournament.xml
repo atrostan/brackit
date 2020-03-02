@@ -1,11 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:orientation="vertical" android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:id="@+id/constraint">
+
+    <Button
+            android:id="@+id/fBtn"
+            android:layout_width="95dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="8dp"
+            android:text="Finish"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/team" />
+
+
+    <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="410dp"
+            android:layout_height="53dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+
+        <EditText
+                android:id="@+id/editText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="Tournament Name"
+                android:inputType="textPersonName" />
+
+        <ImageView
+                android:id="@+id/add"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/ic_add_foreground"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="MissingConstraints" />
+
+
+    </LinearLayout>
+
+    <ListView
+            android:id="@+id/seed"
+            android:layout_width="85dp"
+            android:layout_height="528dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.2"
+            app:layout_constraintStart_toEndOf="@+id/team"
+            app:layout_constraintTop_toBottomOf="@+id/tournmanetName"
+            tools:ignore="MissingConstraints">
+
+
+    </ListView>
+
+    <ListView
+            android:id="@+id/team"
+            android:layout_width="308dp"
+            android:layout_height="527dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tournmanetName"
+            tools:ignore="MissingConstraints"></ListView>
 
     <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="TextView" />
-</LinearLayout>
+            android:id="@+id/tournmanetName"
+            android:layout_width="195dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Tournament Name"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+
+
+    <!--    <TextView-->
+<!--            android:id="@+id/teamName"-->
+<!--            android:layout_width="125dp"-->
+<!--            android:layout_height="23dp"-->
+<!--            android:gravity="center"-->
+<!--            android:text="Team Name"-->
+<!--            android:textAppearance="@style/TextAppearance.AppCompat.Body2"-->
+<!--            android:textSize="18sp"-->
+<!--            app:layout_constraintEnd_toStartOf="@+id/seedName"-->
+<!--            app:layout_constraintHorizontal_bias="0.504"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            tools:layout_editor_absoluteY="109dp" />-->
+
+<!--    <TextView-->
+<!--            android:id="@+id/seedName"-->
+<!--            android:layout_width="71dp"-->
+<!--            android:layout_height="19dp"-->
+<!--            android:layout_marginEnd="10dp"-->
+<!--            android:layout_marginRight="10dp"-->
+<!--            android:gravity="center"-->
+<!--            android:text="Seed"-->
+<!--            android:textAppearance="@style/TextAppearance.AppCompat.Body2"-->
+<!--            android:textSize="18sp"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            tools:layout_editor_absoluteY="113dp" />-->
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
