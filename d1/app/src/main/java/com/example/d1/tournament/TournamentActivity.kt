@@ -23,7 +23,7 @@ import java.io.IOException
 
 
 class TournamentActivity : AppCompatActivity(){
-    val requestURL = "http://172.17.184.246:5000/api/"
+    val requestURL = "http://192.168.0.33:5000/api/"
     var userString = "nouser"
     var client = OkHttpClient()
     var currentRound = 0

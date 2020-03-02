@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     var jsonString = "nouser"
 
 
+
     var t1 = Tournament(arrayListOf("Patrycja","Cheyenne","Jolene","Roxy"), arrayListOf(1,2,3,4),"Valentine's Day Lead-Off of the World Tournament")
     var t2 = Tournament(arrayListOf("Katie","Needham","Fox","Findlay"), arrayListOf(1,2,3,4),"By the Beach Labor Day 1st Down Tournament")
     var t3 = Tournament(arrayListOf("Roxy","Dunkley","Kofi","Erickson"), arrayListOf(1,2,3,4),"Push the button again, I dare you.")

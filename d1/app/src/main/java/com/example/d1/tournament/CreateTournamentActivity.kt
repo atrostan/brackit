@@ -153,7 +153,7 @@ class CreateTournamentActivity:AppCompatActivity(){
         val mediaType = "application/json; charset=utf-8".toMediaType()
 
         val request = Request.Builder()
-            .url("http://172.17.184.246:5000/api/created-tournaments/")
+            .url("192.168.0.33:5000/api/created-tournaments/")
             .post(jobject.toString().toRequestBody(mediaType))
             .build()
 

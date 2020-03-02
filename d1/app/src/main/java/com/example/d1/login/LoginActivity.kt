@@ -19,6 +19,7 @@ import java.io.IOException;
 
 class LoginActivity : AppCompatActivity() {
     var client = OkHttpClient()
+    val requestURL = "http://192.168.0.33:5000/api/"
 
     var USER:String = ""
     var PASS:String=""
@@ -75,8 +76,9 @@ class LoginActivity : AppCompatActivity() {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
 
+        //192.168.0.33    172.17.184.246
         val request = Request.Builder()
-            .url("http://172.17.184.246:5000/api/users")
+            .url(requestURL+"users")
             .post(jobject.toString().toRequestBody(mediaType))
             .build()
 
@@ -114,7 +116,7 @@ class LoginActivity : AppCompatActivity() {
         println(name+"--------------"+pass)
 
         val request = Request.Builder()
-            .url("http://172.17.184.246:5000/api/login")
+            .url(requestURL+"login")
             .addHeader(name1,pass)
             .build()
 
@@ -149,7 +151,7 @@ class LoginActivity : AppCompatActivity() {
         println("=========================================")
         //http://10.0.2.2:5000/match/1 //android simulator should use 10.0.2.2 replace 127.0.0.1
         val request = Request.Builder()
-            .url("http://172.17.184.246:5000/api/user/$id")
+            .url(requestURL+"user/$id")
             .build()
 
         client.newCall(request).enqueue(object : Callback {
