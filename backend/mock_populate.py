@@ -114,8 +114,9 @@ payload = json.dumps({
 }
 """
 
-r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
-
+# r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
+r = requests.post(url, data=payload, headers=headers, auth=('miguel', 'python'))
+print(r.content)
 
 # print all the tables for good measure
 
