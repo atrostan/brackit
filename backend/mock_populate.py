@@ -99,7 +99,7 @@ payload = json.dumps({
     "tournament_name":"Fall Charity LAN 2018 Melee Singles"
 })
 r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
-
+print(r.content)
 
 # print all the tables for good measure
 
