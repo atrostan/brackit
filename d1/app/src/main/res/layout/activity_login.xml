@@ -13,7 +13,6 @@
         tools:context=".login.LoginActivity">
 
 
-
     <EditText
             android:id="@+id/username"
             android:layout_width="0dp"
@@ -46,22 +45,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/username"/>
 
-    <Button
-            android:id="@+id/login"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="48dp"
-            android:layout_marginBottom="64dp"
-            android:text="@string/action_sign_in"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/password"
-            app:layout_constraintVertical_bias="0.2"/>
-
     <ProgressBar
             android:id="@+id/loading"
             android:visibility="gone"
@@ -78,13 +61,31 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.3"/>
 
-    <TextView
-            android:id="@+id/textView2"
-            android:layout_width="212dp"
-            android:layout_height="165dp"
-            android:text="TextView"
+    <LinearLayout
+            android:layout_width="181dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/login" />
+            app:layout_constraintTop_toBottomOf="@+id/password"
+            app:layout_constraintVertical_bias="0.481">
+
+        <Button
+                android:id="@+id/login"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="singn in" />
+
+        <Button
+                android:id="@+id/register"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="register" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
