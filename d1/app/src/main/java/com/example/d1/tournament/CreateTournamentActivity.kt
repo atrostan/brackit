@@ -54,39 +54,35 @@ class CreateTournamentActivity:AppCompatActivity(){
         seedlist.adapter = adapterSeed
 
         add.setOnClickListener{
-//            var rotate = RotateAnimation(0F,135F, Animation.RELATIVE_TO_SELF
-//                ,0.5f,Animation.RELATIVE_TO_SELF,0.5f)
-//            rotate.repeatCount = 0
-//            add.startAnimation(rotate)
+            if (!edittext.text.isEmpty()){
+                if (edittext.hint == "Tournament Name"){
+                    var tournamentName = findViewById<TextView>(R.id.tournmanetName)
+                    tournament_name = edittext.text.toString()
+                    tournamentName.text = tournament_name
 
-            if (edittext.hint == "Tournament Name"){
-                var tournamentName = findViewById<TextView>(R.id.tournmanetName)
-                tournament_name = edittext.text.toString()
-                tournamentName.text = tournament_name
+                    edittext.hint = "Team Name"
+                    edittext.setText("")
 
-                edittext.hint = "Team Name"
-                edittext.setText("")
+                }else if(edittext.hint == "Team Name"){
+                    edittext.inputType = InputType.TYPE_CLASS_NUMBER
+                    teamName.add(edittext.text.toString())
 
-            }else if(edittext.hint == "Team Name"){
-                edittext.inputType = InputType.TYPE_CLASS_NUMBER
-                teamName.add(edittext.text.toString())
+                    adapterTeam.notifyDataSetChanged()
 
-                adapterTeam.notifyDataSetChanged()
-
-                edittext.hint = "Seed"
-                edittext.setText("")
+                    edittext.hint = "Seed"
+                    edittext.setText("")
 
 
-            }else if(edittext.hint == "Seed"){
-                edittext.inputType = InputType.TYPE_CLASS_TEXT
-                seeds.add(edittext.text.toString().toInt())
+                }else if(edittext.hint == "Seed"){
+                    edittext.inputType = InputType.TYPE_CLASS_TEXT
+                    seeds.add(edittext.text.toString().toInt())
 
-                adapterSeed.notifyDataSetChanged()
+                    adapterSeed.notifyDataSetChanged()
 
-                edittext.hint = "Team Name"
-                edittext.setText("")
+                    edittext.hint = "Team Name"
+                    edittext.setText("")
+                }
             }
-
 
         }
 

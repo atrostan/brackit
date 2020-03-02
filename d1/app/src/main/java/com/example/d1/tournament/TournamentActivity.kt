@@ -37,14 +37,6 @@ class TournamentActivity : AppCompatActivity(){
      var u1: ArrayList<Int> = arrayListOf()
      var u2:ArrayList<Int> = arrayListOf()
 
-
-    var date1 = arrayListOf("date1","date2")
-    var score1 = arrayListOf("score1","score2")
-    var u11 = arrayListOf(1,2)
-    var u21 = arrayListOf(3,4)
-
-    //var roundsList: ArrayList<JSONObject> = ArrayList()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.tournament_homepage)
