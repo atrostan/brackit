@@ -25,10 +25,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         val username = findViewById<EditText>(R.id.username) as EditText
         val password = findViewById<EditText>(R.id.password) as EditText
-        val text = findViewById<TextView>(R.id.textView2) as TextView
         val login = findViewById<Button>(R.id.login) as Button
-        val loading = findViewById<ProgressBar>(R.id.loading) as ProgressBar
-
+        //val loading = findViewById<ProgressBar>(R.id.loading) as ProgressBar
 
 
         login.setOnClickListener {
@@ -81,7 +79,6 @@ class LoginActivity : AppCompatActivity() {
                     }
 
                     println("=========================================")
-                    text.text = "Response: "+json
 
                 }
             }
