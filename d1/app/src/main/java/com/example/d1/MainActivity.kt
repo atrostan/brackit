@@ -26,6 +26,7 @@ import com.google.gson.Gson
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private var LOG_IN = false
     lateinit var user:User
+    var jsonString = "nouser"
 
     private lateinit var list: ListView;
     var web = arrayListOf<String>("Java",
@@ -39,6 +40,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera)
+
+    var date = arrayListOf("date1","date2")
+    var score = arrayListOf("score1","score2")
+    var u1 = arrayListOf(1,2)
+    var u2 = arrayListOf(3,4)
 
 
         //when the bottom tab selected
@@ -87,35 +93,41 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val list = findViewById<ListView>(R.id.list)
         list.adapter = listAdapter
 
+
+
+
+        //after user login
+        if (intent.hasExtra("user")){
+
+            var gson = Gson()
+            jsonString = intent.getStringExtra("user")
+            println(jsonString+"----------")
+            if (jsonString != "nouser"){
+                LOG_IN = true
+                user = gson.fromJson(jsonString,User::class.java)
+                println(user)
+                //set header with user name and email
+                resetHeader(user.username,user.email)
+                //set create tournament visible
+                var menu = navView.menu
+                var nav_cTournament = menu.findItem(R.id.nav_createTournament)
+                nav_cTournament.setVisible(true)
+            }
+
+
+            //userchange(user)
+        }
+
         list.setOnItemClickListener { parent, view, position, id ->
             println("------------------------")
             Toast.makeText(this, "You Clicked at " +web[+ position], Toast.LENGTH_SHORT).show();
             val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
             //can pass any data
-            intent.putExtra("STRING_I_NEED",web[+position])
+            intent.putExtra("user",jsonString)
             startActivity(intent)
             finish()
         }
 
-
-        //after user login
-        if (intent.hasExtra("json")){
-            LOG_IN = true
-            var gson = Gson()
-            var userJson = JSONObject(intent.getStringExtra("json"))
-            println("=============login return"+userJson.toString())
-            var jsonString = userJson.toString()
-            user = gson.fromJson(jsonString,User::class.java)
-            println(user)
-            //set header with user name and email
-            resetHeader(user.username,user.email)
-            //set create tournament visible
-            var menu = navView.menu
-            var nav_cTournament = menu.findItem(R.id.nav_createTournament)
-            nav_cTournament.setVisible(true)
-
-            //userchange(user)
-        }
     }
 
     //after user login, set user info and functions
@@ -154,7 +166,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
                 intent.putExtra("json",userString)
                 startActivityForResult(intent,0)
-                finish()
+               // finish()
             }
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
@@ -171,7 +183,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             //can pass any data
             //intent.putExtra()
             startActivity(intent)
-            finish()
+           // finish()
         }
 
         //        layout.setOnClickListener { v ->
