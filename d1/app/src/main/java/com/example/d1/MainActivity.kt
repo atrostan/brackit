@@ -17,6 +17,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.widget.Toast
 import android.widget.LinearLayout
 import com.android.volley.toolbox.JsonObjectRequest
+import com.example.d1.dao.Tournament
 import com.example.d1.dao.User
 import com.example.d1.login.LoginActivity
 import org.json.JSONObject
@@ -28,18 +29,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     lateinit var user:User
     var jsonString = "nouser"
 
-    private lateinit var list: ListView;
-    var web = arrayListOf<String>("Java",
-        "C++",
-        "C#",
-        "HTML",
-        "CSS")
-    var imageId = arrayListOf(R.drawable.ic_menu_camera,
+
+    var t1 = Tournament(arrayListOf("Patrycja","Cheyenne","Jolene","Roxy"), arrayListOf(1,2,3,4),"Valentine's Day Lead-Off of the World Tournament")
+    var t2 = Tournament(arrayListOf("Katie","Needham","Fox","Findlay"), arrayListOf(1,2,3,4),"By the Beach Labor Day 1st Down Tournament")
+    var t3 = Tournament(arrayListOf("Roxy","Dunkley","Kofi","Erickson"), arrayListOf(1,2,3,4),"Push the button again, I dare you.")
+    var t4 = Tournament(arrayListOf("Patrycja","Cheyenne"), arrayListOf(3,4),"Epic Last Day of School Back of the Net Tournament")
+
+    var tournamentsName = arrayListOf("Valentine's Day Lead-Off of the World Tournament",
+        "By the Beach Labor Day 1st Down Tournament","Push the button again, I dare you.","Epic Last Day of School Back of the Net Tournament")
+    private lateinit var list: ListView
+
+    /*
+    *
+    * R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera,
         R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera)
+        R.drawable.ic_menu_camera
+        *
+        * */
+
+    var imageId = arrayListOf(R.drawable.tournament,R.drawable.tournament,R.drawable.tournament,R.drawable.tournament)
 
     var date = arrayListOf("date1","date2")
     var score = arrayListOf("score1","score2")
@@ -55,10 +66,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 textMessage.setText(R.string.title_home)
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_notifications -> {
-                textMessage.setText(R.string.title_profile)
-                return@OnNavigationItemSelectedListener true
-            }
+//            R.id.navigation_notifications -> {
+//                textMessage.setText(R.string.title_profile)
+//                return@OnNavigationItemSelectedListener true
+//            }
         }
         false
     }
@@ -89,7 +100,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bottomNavView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
 
 
-        var listAdapter = HomeList(this@MainActivity, web, imageId)
+        var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
         val list = findViewById<ListView>(R.id.list)
         list.adapter = listAdapter
 
@@ -111,16 +122,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 //set create tournament visible
                 var menu = navView.menu
                 var nav_cTournament = menu.findItem(R.id.nav_createTournament)
+                var nav_history = menu.findItem(R.id.nav_history)
+                var nav_logout = menu.findItem(R.id.nav_logout)
                 nav_cTournament.setVisible(true)
+                nav_history.setVisible(true)
+                nav_logout.setVisible(true)
             }
 
-
-            //userchange(user)
         }
 
         list.setOnItemClickListener { parent, view, position, id ->
             println("------------------------")
-            Toast.makeText(this, "You Clicked at " +web[+ position], Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "You Clicked at " +tournamentsName[+ position], Toast.LENGTH_SHORT).show();
             val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
             //can pass any data
             intent.putExtra("user",jsonString)
@@ -130,12 +143,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     }
 
-    //after user login, set user info and functions
-    fun userchange(user:User){
-        var userName = findViewById<TextView>(R.id.login)
-        userName.text = user.username
-
-    }
 
     override fun onBackPressed() {
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
@@ -164,9 +171,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 var gson=Gson();
                 var userString = gson.toJson(user)
                 val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
-                intent.putExtra("json",userString)
+                intent.putExtra("user",jsonString)
                 startActivityForResult(intent,0)
-               // finish()
+                finish()
+            }
+            R.id.nav_logout ->{
+                resetHeader("Sign in","")
+                val navView: NavigationView = findViewById(R.id.nav_view)
+                var menu = navView.menu
+                var nav_cTournament = menu.findItem(R.id.nav_createTournament)
+                var nav_history = menu.findItem(R.id.nav_history)
+                var nav_logout = menu.findItem(R.id.nav_logout)
+                nav_cTournament.setVisible(false)
+                nav_history.setVisible(false)
+                nav_logout.setVisible(false)
+                LOG_IN = false
+
             }
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
@@ -185,18 +205,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             startActivity(intent)
            // finish()
         }
-
-        //        layout.setOnClickListener { v ->
-//            System.out.println("-----------------------------Befor Login in------------------------------")
-//            var t: TextView = v!!.findViewById(R.id.login)
-//            t.text = "newText"
-//
-//            val intent = this.intent.setClassName(this,"com.example.d1.login.LoginActivity")
-//            //can pass any data
-//            //intent.putExtra()
-//            startActivity(intent)
-//            finish()
-//        }
 
     }
 

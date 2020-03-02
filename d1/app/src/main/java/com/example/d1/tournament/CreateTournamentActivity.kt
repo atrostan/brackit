@@ -19,6 +19,7 @@ import org.json.JSONObject
 
 
 class CreateTournamentActivity:AppCompatActivity(){
+    var userString = "nouser"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +35,9 @@ class CreateTournamentActivity:AppCompatActivity(){
         //navigate back
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        if (intent.hasExtra("json")){
-
+        if (intent.hasExtra("user")){
+            userString = intent.getStringExtra("user")
+            println("user login---------------"+userString)
         }
 
         var add = findViewById<ImageView>(R.id.add)
@@ -169,7 +171,9 @@ class CreateTournamentActivity:AppCompatActivity(){
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         val myIntent = Intent(applicationContext, MainActivity::class.java)
+        myIntent.putExtra("user",userString)
         startActivityForResult(myIntent, 0)
+
         finish()
         return true
     }
