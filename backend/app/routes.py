@@ -184,20 +184,14 @@ def create_tournament():
         tuple_list = [(u, s) for u, s in zip(users, seeds)]
         t = Tournament(tuple_list, bracket_type)
 
-        print(t)
         print(tuple_list)
-        t.post_to_db(tournament_name, TO)
-        print(t)
+        t_id = t.post_to_db(tournament_name, TO)
 
         # post self references in matches separately
         for r in t.bracket.rounds:
-            print(r)
             for m in r.matches:
                 m.post_self_refs()
-                print(m)
-
-        print("-----------------")
-        return jsonify({'tournament': tournament_name})
+        return jsonify({'tournament_id': t_id})
     else:
         # return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
         return

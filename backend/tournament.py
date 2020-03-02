@@ -32,7 +32,6 @@ class Tournament:
         self.bracket = Bracket(entrants, bracketType)
 
     def post_to_db(self, tournament_name, TO):
-
         """push tournament to db
         
         Arguments:
@@ -41,9 +40,7 @@ class Tournament:
         """
 
         # tournament organizer id
-        print(TO)
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
-        print(o_id)
 
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
@@ -56,14 +53,14 @@ class Tournament:
         # post this tournament's bracket to db
         self.bracket.post_to_db(t_model)
 
-        return True
+        return t_model.id
 
 
 class Bracket:
     def __init__(self, entrants, bracketType):
         self.entrants = entrants
         self.bracketType = bracketType
-        self.ceilPlayers = int(2**(math.ceil(math.log2(len(self.entrants)))))
+        self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
         if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
 
@@ -105,7 +102,7 @@ class Bracket:
         for i in range(1, self.numLosersRounds+1):
             if i == 1:
                 self.rounds.append(Round(i, self, int(
-                    math.ceil(self.ceilPlayers/(2**(2*(math.ceil(i/2)))))), isWinners=False))
+                    self.ceilPlayers/(2**(2*(math.ceil(i/2))))), isWinners=False))
             elif i % 2 == 0:
                 self.rounds.append(Round(
                     i, self, self.rounds[self.numLosersRounds + i-1].numMatches, isWinners=False))
@@ -178,9 +175,8 @@ class Round:
             return
 
         for i in range(0, len(self.matches)):
-            if (self.number == len(self.bracket.rounds)):
-                self.matches[i].winnerPlaysInMatch(None)
-            elif (self.isWinners == True):
+
+            if (self.isWinners == True):
                 r_idx = self.number # round index
                 m_idx = int(math.floor(i / 2)) # match index
                 self.matches[i].winnerPlaysInMatch(
@@ -192,8 +188,7 @@ class Round:
                     r_idx = self.bracket.numWinnersRounds
                     m_idx = int(math.floor(i / 2))
                     self.matches[i].loserPlaysInMatch(
-                        self.bracket.rounds[r_idx]
-                            .matches[m_idx]
+                        self.bracket.rounds[r_idx].matches[m_idx]
                     )
 
                 else:
@@ -203,20 +198,18 @@ class Round:
                     m_idx = i
                     # should work, but no dj avoidance
                     self.matches[i].loserPlaysInMatch(
-                        self.bracket.rounds[r_idx]
-                            .matches[m_idx]
+                        self.bracket.rounds[r_idx].matches[m_idx]
                     )
                     #placeInLosers += 2
 
-            elif (self.isWinners == False):
+            if (self.isWinners == False):
                 ## place winner of losers finals in grand finals
 
                 if self.number == self.bracket.numLosersRounds:
                     r_idx = self.bracket.numWinnersRounds
                     m_idx = i
                     self.matches[i].winnerPlaysInMatch(
-                        self.bracket.rounds[r_idx]
-                            .matches[m_idx])
+                        self.bracket.rounds[r_idx].matches[m_idx])
 
                 # if next round has the same number of matches as the current 
                 # round
@@ -224,8 +217,7 @@ class Round:
                     r_idx = self.bracket.numWinnersRounds + self.number
                     m_idx = i
                     self.matches[i].winnerPlaysInMatch(
-                        self.bracket.rounds[r_idx]
-                            .matches[m_idx])
+                        self.bracket.rounds[r_idx].matches[m_idx])
                 
                 # if next round plays opponents from the winners bracket aka if 
                 # next round in losers bracket has less matches than this round
@@ -233,8 +225,7 @@ class Round:
                     r_idx = self.bracket.numWinnersRounds + self.number
                     m_idx = int(math.floor(i/2))
                     self.matches[i].winnerPlaysInMatch(
-                        self.bracket.rounds[r_idx]
-                            .matches[m_idx]
+                        self.bracket.rounds[r_idx].matches[m_idx]
                     )
 
 
