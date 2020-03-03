@@ -1,6 +1,7 @@
 package com.example.d1.login
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.AsyncTask
 import android.os.Bundle
 import android.view.MenuItem
@@ -27,6 +28,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
 
 

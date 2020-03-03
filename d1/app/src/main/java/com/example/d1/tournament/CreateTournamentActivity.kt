@@ -1,6 +1,7 @@
 package com.example.d1.tournament
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
@@ -20,11 +21,14 @@ import org.json.JSONObject
 
 class CreateTournamentActivity:AppCompatActivity(){
     var userString = "nouser"
+    var TournamentID = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.create_tournament)
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         var tournament_name = ""
         var teamName = arrayListOf<String>()
@@ -146,8 +150,7 @@ class CreateTournamentActivity:AppCompatActivity(){
                     .header("Authorization", credential)
                     .build()
             }
-        })
-            .build()
+        }).build()
 
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -158,10 +161,31 @@ class CreateTournamentActivity:AppCompatActivity(){
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+            var tId = 0
+            //if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-            println(response.body!!.string()+"---------------post tournament")
+            if (response.code == 200){
+                var tempjsonString = response.body!!.string()
+                println("$tempjsonString-------------------------------")
+                var objectjson = JSONObject(tempjsonString)
+                tId = objectjson["tournament_id"] as Int
+                println("$tId-------------------------------")
+                TournamentID = tId
+                println("This is the TOURNAMENT ID=====================$TournamentID")
+
+                runOnUiThread{
+                    Toast.makeText(this@CreateTournamentActivity, "Tournament Created", Toast.LENGTH_SHORT).show()
+                }
+
+                val myIntent = Intent(applicationContext, MainActivity::class.java)
+                myIntent.putExtra("user",userString)
+                myIntent.putExtra("tId",TournamentID.toString())
+                startActivityForResult(myIntent, 0)
+                finish()
+
+            }
         }
+
     }
 
 

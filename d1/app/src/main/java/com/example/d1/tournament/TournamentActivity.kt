@@ -2,6 +2,7 @@ package com.example.d1.tournament
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -23,6 +24,7 @@ import java.io.IOException
 
 
 class TournamentActivity : AppCompatActivity(){
+
     val requestURL = "http://192.168.0.33:5000/api/"
     var userString = "nouser"
     var client = OkHttpClient()
@@ -31,6 +33,8 @@ class TournamentActivity : AppCompatActivity(){
     lateinit var preText:TextView
     lateinit var nextText:TextView
     lateinit var roundText:TextView
+    var TournamentId = 0
+    var realRound = 0
 
      var date:ArrayList<String> = arrayListOf()
      var score: ArrayList<String> = arrayListOf()
@@ -40,6 +44,8 @@ class TournamentActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.tournament_homepage)
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         if (intent.hasExtra("user")){
             userString = intent.getStringExtra("user")
@@ -64,8 +70,16 @@ class TournamentActivity : AppCompatActivity(){
             savedInstanceState.getSerializable("STRING_I_NEED") as String?
         }
 
+        if (intent.hasExtra("tId")){
+            var a = intent.getStringExtra("tId")
+            TournamentId = a.toInt()
+            println("-------------------$TournamentId in TournamentActivity")
+            getTournament(TournamentId)
+        }else{
+            getTournament(1)
+        }
 
-        getTournament(1)
+
 
         //navigate back
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -91,12 +105,13 @@ class TournamentActivity : AppCompatActivity(){
                //     var text = findViewById<TextView>(R.id.name)
                     val json = JSONObject(response.body!!.string())
 
-                    var brackets = json["brackets"]
+                    var brackets = json["brackets"] as JSONArray
+                    var bid = brackets.getInt(0)
 
                     println("=========================================")
                   //  text.text = "Response: "+json + "   "+ brackets.javaClass.name
 
-                    getBracket(1)
+                    getBracket(bid)
 
                 }
             }
@@ -124,7 +139,9 @@ class TournamentActivity : AppCompatActivity(){
 
                     var rounds = json["rounds"] as JSONArray
 
-                    getRound(currentRound+1)
+                    realRound = rounds.getInt(0)
+
+                    getRound(realRound)
 
                     //println(roundsList)
                     totalRounds = rounds.length()
@@ -169,6 +186,8 @@ class TournamentActivity : AppCompatActivity(){
                     var matchs = json["matches"] as JSONArray
 
                     for(i in 0 until matchs.length()){
+                        println("--------${matchs.getInt(i)} real match id--------")
+
                         getMatch(matchs.getInt(i))
                     }
 
@@ -237,6 +256,7 @@ class TournamentActivity : AppCompatActivity(){
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         val myIntent = Intent(applicationContext, MainActivity::class.java)
         myIntent.putExtra("user",userString)
+        myIntent.putExtra("tId",TournamentId.toString())
         startActivityForResult(myIntent, 0)
         finish()
         return true
@@ -259,7 +279,10 @@ class TournamentActivity : AppCompatActivity(){
                 nextText.visibility = View.VISIBLE
             }
 
-            var round = getRound(currentRound+1)
+            realRound-=1
+            println("--------$realRound--------")
+
+            var round = getRound(realRound)
 
         }
 
@@ -281,8 +304,9 @@ class TournamentActivity : AppCompatActivity(){
                 nextText.visibility = View.INVISIBLE
             }
 
-
-            var round = getRound(currentRound+1)
+            realRound+=1
+            println("--------$realRound--------")
+            var round = getRound(realRound)
 
 //            var listAdapter = BracketList(this,date,u1,score,u2)
 //            val list = findViewById<ListView>(R.id.list_tournament)

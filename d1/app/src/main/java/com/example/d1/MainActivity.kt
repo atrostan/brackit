@@ -2,6 +2,7 @@ package com.example.d1
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.core.view.GravityCompat
@@ -22,12 +23,18 @@ import com.example.d1.dao.User
 import com.example.d1.login.LoginActivity
 import org.json.JSONObject
 import com.google.gson.Gson
+import okhttp3.*
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    val requestURL = "http://192.168.0.33:5000/api/"
+    var client = OkHttpClient()
     private var LOG_IN = false
     lateinit var user:User
     var jsonString = "nouser"
+    var TournamentId = 0
+    var Tournament_user_have = arrayListOf<Int>()
 
 
 
@@ -38,6 +45,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     var tournamentsName = arrayListOf("Valentine's Day Lead-Off of the World Tournament",
         "By the Beach Labor Day 1st Down Tournament","Push the button again, I dare you.","Epic Last Day of School Back of the Net Tournament")
+
+    var imageId = arrayListOf(R.drawable.tournament,R.drawable.tournament,R.drawable.tournament,R.drawable.tournament)
     private lateinit var list: ListView
 
     /*
@@ -51,7 +60,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         *
         * */
 
-    var imageId = arrayListOf(R.drawable.tournament,R.drawable.tournament,R.drawable.tournament,R.drawable.tournament)
+
 
     var date = arrayListOf("date1","date2")
     var score = arrayListOf("score1","score2")
@@ -81,6 +90,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setContentView(R.layout.activity_main)
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         //reset header
         resetHeader("Sign in","")
@@ -132,6 +143,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         }
 
+        if (intent.hasExtra("tId")){
+            var a = intent.getStringExtra("tId")
+            TournamentId = a.toInt()
+            println("-------------$a-----------------tId in mainactivity")
+            Tournament_user_have.add(TournamentId)
+            getTournament(TournamentId)
+        }
+
         list.setOnItemClickListener { parent, view, position, id ->
             println("------------------------")
             Toast.makeText(this, "You Clicked at " +tournamentsName[+ position], Toast.LENGTH_SHORT).show();
@@ -159,20 +178,49 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.nav_home -> {
-                textMessage.setText(R.string.title_home)
+                tournamentsName.clear()
+                imageId.clear()
+                var tournamentsName1 = arrayListOf("Valentine's Day Lead-Off of the World Tournament",
+                    "By the Beach Labor Day 1st Down Tournament","Push the button again, I dare you.","Epic Last Day of School Back of the Net Tournament")
+
+                var imageId1 = arrayListOf(R.drawable.tournament,R.drawable.tournament,R.drawable.tournament,R.drawable.tournament)
+
+                tournamentsName.addAll(tournamentsName1)
+                imageId.addAll(imageId1)
+
+                var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                val list = findViewById<ListView>(R.id.list)
+                listAdapter.notifyDataSetChanged()
+                list.adapter = listAdapter
+
+                for (i in Tournament_user_have){
+                    getTournament(i)
+                }
+
+
             }
             R.id.nav_notification -> {
                 textMessage.setText(R.string.menu_notification)
             }
             R.id.nav_history -> {
-                textMessage.setText(R.string.menu_history)
+                tournamentsName.clear()
+                imageId.clear()
+
+                var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                val list = findViewById<ListView>(R.id.list)
+                listAdapter.notifyDataSetChanged()
+                list.adapter = listAdapter
+
+                for (i in Tournament_user_have){
+                    getTournament(i)
+                }
             }
             R.id.nav_createTournament -> {
-                textMessage.setText(R.string.create_tournament)
                 var gson=Gson();
                 var userString = gson.toJson(user)
                 val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
                 intent.putExtra("user",jsonString)
+                intent.putExtra("tId",TournamentId.toString())
                 startActivityForResult(intent,0)
                 finish()
             }
@@ -226,6 +274,48 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         //email to empty string
         email.text = e
+    }
+
+
+    private fun getTournament(id: Int) {
+
+        val request = Request.Builder()
+            .url(requestURL+"tournament/"+ "$id")
+            .build()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //     var text = findViewById<TextView>(R.id.name)
+                    val json = JSONObject(response.body!!.string())
+
+                    var name = json["name"] as String
+
+                    tournamentsName.add(name)
+                    imageId.add(R.drawable.tournament)
+
+                    runOnUiThread{
+                        var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                        val list = findViewById<ListView>(R.id.list)
+                        listAdapter.notifyDataSetChanged()
+                        list.adapter = listAdapter
+                    }
+
+                    println("=========================================")
+                    //  text.text = "Response: "+json + "   "+ brackets.javaClass.name
+
+                }
+            }
+        })
     }
 }
 
