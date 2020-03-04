@@ -203,6 +203,7 @@ def get_user(id):
     dump_data = user_schema.dump(user)
     return dump_data
 
+
 @app.route('/api/tournament/<int:id>')
 def tournament(id):
     tournament_schema = TournamentSchema()
@@ -217,7 +218,7 @@ def bracket(id):
     dump_data = bracket_schema.dump(bracket)
     return dump_data
 
-@app.route('/api/round/<int:id>')
+@app.route('/api/round/<int:id>',)
 def round(id):
     round_schema = RoundSchema()
     round = RoundModel.query.filter_by(id=id).first_or_404()
@@ -230,3 +231,16 @@ def match(id):
     match = MatchModel.query.filter_by(id=id).first_or_404()
     dump_data = match_schema.dump(match)
     return dump_data
+
+@app.route('/api/match/<int:id>/update', methods=['POST'])
+@auth.login_required
+def update_match(id):
+    match_schema = MatchSchema()
+    match = MatchModel.query.filter_by(id=id).first_or_404()
+    round = RoundModel.query.filter_by(id=id).first_or_404()
+    brkt = BracketModel.query.filter_by(id=)
+
+    print(vars(round))
+    dump_data = match_schema.dump(match)
+    return dump_data
+    # return
