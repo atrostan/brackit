@@ -100,7 +100,39 @@ payload = json.dumps({
 })
 r = requests.post(url, data=payload, headers=headers, auth=("miguel", 'python'))
 print(r.content)
+tournament = TournamentModel.query.filter_by(id=r.json().get("tournament_id")).first_or_404()
 
+
+for bracket in tournament.brackets:
+    for round in bracket.rounds:
+        for match in round.matches:
+            if match.id == 8:
+                urlgf = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
+                payloadgf = json.dumps({
+                    "entrant1_score": 0,
+                    "entrant2_score": 3,
+                    "winner": match.user_2,
+                    "loser": match.user_1
+                })
+            elif match.id == 9:
+                urlgfr = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
+                payloadgfr = json.dumps({
+                    "entrant1_score": 3,
+                    "entrant2_score": 0,
+                    "winner": match.user_1,
+                    "loser": match.user_2
+                })
+            else:
+                url = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
+                payload = json.dumps({
+                    "entrant1_score": 2,
+                    "entrant2_score": 0,
+                    "winner": match.user_1,
+                    "loser": match.user_2
+                })
+                requests.post(url, data=payload, headers=headers)
+requests.post(urlgf, data=payloadgf, headers=headers)
+requests.post(urlgfr, data=payloadgfr, headers=headers)
 # print all the tables for good measure
 
 # Create the connection

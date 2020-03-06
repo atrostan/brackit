@@ -157,8 +157,19 @@ class Match(db.Model):
 	u2 = db.relationship("User", foreign_keys='Match.user_2')
 	match_winner = db.relationship('User', foreign_keys='Match.winner')
 
+	def input_user_to_match(self, entrant):
+		if self.user_1 == None:
+			self.user_1 = entrant
+		elif self.user_2 == None:
+			self.user_2 = entrant
+		else:
+			print("The match " + str(self.id) +
+                  " is full! Error")
+
 	def __repr__(self):
 		return f'<match {self.id} between {self.user_1} and {self.user_2}>'
+
+	
 
 # marshmellow schemas (needed to de/serialize to json)
 

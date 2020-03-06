@@ -7,6 +7,7 @@ from flask import (
     url_for,
     jsonify
 )
+from flask_api import status
 from app import app
 from app.forms import (
     EditProfileForm,
@@ -196,6 +197,88 @@ def create_tournament():
         # return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
         return
     
+@app.route('/api/match/<int:id>/report-match', methods=['POST'])
+def report_match(id):
+    match = MatchModel.query.filter_by(id=id).first_or_404()
+    if match.user_1 is None or match.user_2 is None:
+        content = {'This match has not been reached': 'it cannot be reported'}
+        return content, status.HTTP_406_NOT_ACCEPTABLE
+    entrant1_score = request.json.get('entrant1_score')
+    entrant2_score = request.json.get('entrant2_score')
+    winner_id = request.json.get('winner')
+    loser_id = request.json.get('loser')
+    match.user_1_score = entrant1_score
+    match.user_2_score = entrant2_score
+    match.winner = winner_id
+    if match.winner_to is not None:
+        match.winner_to.input_user_to_match(winner_id)
+        db.session.add(match.winner_to)
+    if (match.loser_to is not None):
+        match.loser_to.input_user_to_match(loser_id)
+        db.session.add(match.loser_to)
+    
+    db.session.add(match)
+    db.session.commit()
+
+    match_schema = MatchSchema()
+    return match_schema.dump(match)
+
+@app.route('/api/user/<int:id>/winsandlosses')
+def winsandlosses(id):
+    user = UserModel.query.filter_by(id=id).first_or_404()
+    user_brackets = user.brackets
+    wins_losses = []
+    alreadyin = False
+    for bracket in user_brackets:
+        for round in bracket.rounds:
+            for match in round.matches:
+                if match.u1 is None or match.u2 is None or match.winner is None:
+                    continue
+                if match.user_2 == id:
+                    for winloss in wins_losses:
+                        if match.user_1 == winloss.get("User"):
+                            alreadyin = True
+                            if match.user_1 == match.winner:
+                                winloss.update({"Losses": winloss.get("Losses") + 1})
+                            elif match.winner == id:
+                                winloss.update({"Wins": winloss.get("Wins") + 1})
+                    if not alreadyin:
+                        if match.user_1 == match.winner:
+                            wins_losses.append({
+                                        "User": match.user_1, 
+                                        "Wins": 0, 
+                                        "Losses": 1
+                                    })
+                        elif match.winner == id:
+                            wins_losses.append({
+                                        "User": match.user_1, 
+                                        "Wins": 1, 
+                                        "Losses": 0
+                                    })
+                if match.user_1 == id:
+                    for winloss in wins_losses:
+                        if match.user_2 == winloss.get("User"):
+                            alreadyin = True
+                            if match.user_2 == match.winner:
+                                winloss.update({"Losses": winloss.get("Losses") + 1})
+                            elif match.winner == id:
+                                winloss.update({"Wins": winloss.get("Wins") + 1})
+                    if not alreadyin:
+                        if match.user_2 == match.winner:
+                            wins_losses.append({
+                                        "User": match.user_2, 
+                                        "Wins": 0, 
+                                        "Losses": 1
+                                    })
+                        elif match.winner == id:
+                            wins_losses.append({
+                                        "User": match.user_2, 
+                                        "Wins": 1, 
+                                        "Losses": 0
+                                    })
+    return jsonify(wins_losses)
+
+
 @app.route('/api/user/<int:id>')
 def get_user(id):
     user_schema = UserSchema()
