@@ -24,6 +24,56 @@ import uuid
 import requests
 import json
 
+def handle_progression(tournament, tkn):
+    """Mimic Progression Handling of a Tournament
+    
+    Arguments:
+        tournament {TournamentMode} -- a sqlAlchemy db model represnting
+        a double elimination bracket tournament
+        tkn {string} -- a unique authentication token
+        used to ensure that only the tournament organizer enters scores in a 
+        bracket 
+    """
+    url_prefix = 'http://127.0.0.1:5000/'
+    for bracket in tournament.brackets:
+        for round in bracket.rounds:
+            for match in round.matches:
+                if match.id == 8:
+                    urlgf = \
+                        f'{url_prefix}api/match/{match.id}/report-match'
+                    payloadgf = json.dumps({
+                        "entrant1_score": 0,
+                        "entrant2_score": 3,
+                        "winner": match.user_2,
+                        "loser": match.user_1
+                    })
+                elif match.id == 9:
+                    urlgfr = \
+                        f'{url_prefix}api/match/{match.id}/report-match'
+                    payloadgfr = json.dumps({
+                        "entrant1_score": 3,
+                        "entrant2_score": 0,
+                        "winner": match.user_1,
+                        "loser": match.user_2
+                    })
+                else:
+                    url = \
+                        f'{url_prefix}api/match/{match.id}/report-match'
+                    payload = json.dumps({
+                        "entrant1_score": 2,
+                        "entrant2_score": 0,
+                        "winner": match.user_1,
+                        "loser": match.user_2
+                    })
+                    requests.post(
+                        url, data=payload, headers=headers, 
+                        auth=(tkn, 'unused')
+                    )
+    requests.post(urlgf, data=payloadgf, headers=headers, auth=(tkn, 'unused'))
+    requests.post(urlgfr, data=payloadgfr, headers=headers, auth=(tkn, 'unused'))
+
+
+
 # purge all tables first
 db.session.close()
 def purge(Model):
@@ -100,39 +150,24 @@ payload = json.dumps({
 })
 r = requests.post(url, data=payload, headers=headers, auth=("miguel", 'python'))
 print(r.content)
-tournament = TournamentModel.query.filter_by(id=r.json().get("tournament_id")).first_or_404()
+tournament = \
+    TournamentModel \
+        .query \
+        .filter_by(id=r.json().get("tournament_id")) \
+        .first_or_404()
 
+# get user's tkn
+username = 'C'
+url = 'http://127.0.0.1:5000/api/token'
+r = requests.get(url, auth=(username, username.lower()))
+c_tkn = json.loads(r.content)['token']
 
-for bracket in tournament.brackets:
-    for round in bracket.rounds:
-        for match in round.matches:
-            if match.id == 8:
-                urlgf = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
-                payloadgf = json.dumps({
-                    "entrant1_score": 0,
-                    "entrant2_score": 3,
-                    "winner": match.user_2,
-                    "loser": match.user_1
-                })
-            elif match.id == 9:
-                urlgfr = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
-                payloadgfr = json.dumps({
-                    "entrant1_score": 3,
-                    "entrant2_score": 0,
-                    "winner": match.user_1,
-                    "loser": match.user_2
-                })
-            else:
-                url = 'http://127.0.0.1:5000/api/match/' + str(match.id) + '/report-match'
-                payload = json.dumps({
-                    "entrant1_score": 2,
-                    "entrant2_score": 0,
-                    "winner": match.user_1,
-                    "loser": match.user_2
-                })
-                requests.post(url, data=payload, headers=headers)
-requests.post(urlgf, data=payloadgf, headers=headers)
-requests.post(urlgfr, data=payloadgfr, headers=headers)
+# user can't enter scores
+handle_progression(tournament, c_tkn)
+
+# TO (miguel) can enter scores
+handle_progression(tournament, tkn)
+
 # print all the tables for good measure
 
 # Create the connection
@@ -149,17 +184,17 @@ q = \
 """
 # create the dataframe from a query
 
-print('#'*68)
-print()
+# print('#'*68)
+# print()
 
-print('Users\' table')
-df = pd.read_sql_query(q, cnx)
-print(df)
-print()
-for table in ['tournament', 'bracket', 'bracket_entrants', 'round', 'match']:
-    print('#'*68)
-    print()
+# print('Users\' table')
+# df = pd.read_sql_query(q, cnx)
+# print(df)
+# print()
+# for table in ['tournament', 'bracket', 'bracket_entrants', 'round', 'match']:
+#     print('#'*68)
+#     print()
 
-    print(f'{table} table')
-    print(pd.read_sql_query(f'select * from {table}', cnx))
-    print()
+#     print(f'{table} table')
+#     print(pd.read_sql_query(f'select * from {table}', cnx))
+#     print()

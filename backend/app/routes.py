@@ -113,20 +113,6 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = UserModel(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
-
 # validation of user credentials - callback invoked whenever 
 # @auth.login_required decorator is used
 @auth.verify_password
@@ -196,10 +182,19 @@ def create_tournament():
     else:
         # return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
         return
-    
+
 @app.route('/api/match/<int:id>/report-match', methods=['POST'])
+@auth.login_required
 def report_match(id):
     match = MatchModel.query.filter_by(id=id).first_or_404()
+
+    # ensure that TO is inputting scores and winners
+    if g.user.id != match.get_TO():
+        content = {
+            'Access Denied': 'Only Tournament Organizers can report matches'
+        }
+        return content, status.HTTP_403_FORBIDDEN
+
     if match.user_1 is None or match.user_2 is None:
         content = {'This match has not been reached': 'it cannot be reported'}
         return content, status.HTTP_406_NOT_ACCEPTABLE
@@ -313,3 +308,7 @@ def match(id):
     match = MatchModel.query.filter_by(id=id).first_or_404()
     dump_data = match_schema.dump(match)
     return dump_data
+
+
+
+

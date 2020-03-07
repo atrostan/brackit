@@ -169,7 +169,18 @@ class Match(db.Model):
 	def __repr__(self):
 		return f'<match {self.id} between {self.user_1} and {self.user_2}>'
 
-	
+	def get_TO(self,):
+		"""Get the Match's Tournament Organizer
+		"""
+
+		# match = MatchModel.query.filter_by(id=m_id).first_or_404()
+		r_id = self.round_id
+		round = Round.query.filter_by(id=r_id).first_or_404()
+		b_id = round.bracket_id
+		bracket = Bracket.query.filter_by(id=b_id).first_or_404()
+		t_id = bracket.tournament_id
+		tournament = Tournament.query.filter_by(id=t_id).first_or_404()
+		return tournament.organizer_id
 
 # marshmellow schemas (needed to de/serialize to json)
 
@@ -208,3 +219,5 @@ class MatchSchema(SQLAlchemyAutoSchema):
 @login.user_loader
 def load_user(id):
 	return User.query.get(int(id))
+
+
