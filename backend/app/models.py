@@ -22,6 +22,23 @@ bracket_entrants = db.Table('bracket_entrants',
 									primary_key=True)
 							)
 
+class Lobby(db.Model):
+	__tablename__ = 'lobby'
+	id = db.Column(db.Integer, primary_key=True)
+	tournament_name = db.Column(db.String(64))
+	tournament_organizer = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+	# impose a unique constraint on lobbies using the TO AND Tname cols
+	__table_args__ = (
+		db.UniqueConstraint(
+			'tournament_name', 
+			'tournament_organizer', 
+			name='_tournament_org_name_uc'
+		),
+	)
+
+	entrants = db.relationship('User', backref='lobby', lazy=True)
+
 class User(UserMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	role = db.Column(db.String(10))
@@ -212,6 +229,12 @@ class RoundSchema(SQLAlchemyAutoSchema):
 class MatchSchema(SQLAlchemyAutoSchema):
 	class Meta:
 		model = Match
+		include_relationships = True
+		load_instance = True  # Optional: deserialize to model instances
+
+class LobbySchema(SQLAlchemyAutoSchema):
+	class Meta:
+		model = Lobby
 		include_relationships = True
 		load_instance = True  # Optional: deserialize to model instances
 

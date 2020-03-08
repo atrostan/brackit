@@ -1,8 +1,8 @@
 """commit message
 
-Revision ID: 915ce4caa753
+Revision ID: a97fc208658c
 Revises: 
-Create Date: 2020-03-07 17:51:32.221077
+Create Date: 2020-03-08 09:22:31.780184
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '915ce4caa753'
+revision = 'a97fc208658c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,6 +30,14 @@ def upgrade():
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
+    op.create_table('lobby',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('tournament_name', sa.String(length=64), nullable=True),
+    sa.Column('tournament_organizer', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['tournament_organizer'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('tournament_name', 'tournament_organizer', name='_tournament_org_name_uc')
+    )
     op.create_table('post',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('body', sa.String(length=140), nullable=True),
@@ -102,6 +110,7 @@ def downgrade():
     op.drop_table('tournament')
     op.drop_index(op.f('ix_post_timestamp'), table_name='post')
     op.drop_table('post')
+    op.drop_table('lobby')
     op.drop_index(op.f('ix_user_username'), table_name='user')
     op.drop_index(op.f('ix_user_email'), table_name='user')
     op.drop_table('user')

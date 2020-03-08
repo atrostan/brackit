@@ -22,6 +22,7 @@ from flask_login import (
 )
 
 from app.models import Bracket as BracketModel
+from app.models import Lobby as LobbyModel
 from app.models import Match as MatchModel
 from app.models import Round as RoundModel
 from app.models import Tournament as TournamentModel
@@ -29,6 +30,7 @@ from app.models import User as UserModel
 
 from app.models import (
     BracketSchema,
+    LobbySchema,
     MatchSchema,
     RoundSchema,
     TournamentSchema,
@@ -101,6 +103,24 @@ def user_login():
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
+
+@app.route('/api/create/lobby/', methods=['POST'])
+@auth.login_required
+def create_lobby():
+    if request.method == 'POST':
+        TO = g.user.username
+        tournament_name = request.json.get('tournament_name')
+
+        lobby = LobbyModel(
+            tournament_name=tournament_name,
+            tournament_organizer=TO,
+        )
+
+        db.session.add(lobby); db.session.commit()
+        content = {
+            'Lobby Created': f'Lobby created for tournament: {tournament_name}'
+        }
+        return content, status.HTTP_201_CREATED
 
 # tournament creation endpoint
 @app.route('/api/created-tournaments/', methods=['GET', 'POST'])
