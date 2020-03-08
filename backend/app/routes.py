@@ -5,7 +5,8 @@ from flask import (
     redirect, 
     render_template, 
     url_for,
-    jsonify
+    jsonify, 
+    session
 )
 from flask_api import status
 from app import app
@@ -61,12 +62,15 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
 
-# @app.route('/logout')
-# def logout():
-#     user = g.user.username
-#     logout_user()
-#     content
-#     return redirect(url_for('index'))
+# @app.before_request
+# def load_user():
+#     print(vars(session))
+#     if session["id"]:
+#         user = UserModel.query.filter_by(username=session["id"]).first()
+#     else:
+#         user = {"name": "Guest"}  # Make it better, use an anonymous User instead
+
+#     g.user = user
 
 # validation of user credentials - callback invoked whenever 
 # @auth.login_required decorator is used
@@ -103,8 +107,21 @@ def new_user():
 @app.route('/api/login')
 @auth.login_required
 def user_login():
+    print(g.user)
     login_user(g.user)
-    return jsonify({ 'data': 'Hello, %s!' % g.user.username })
+    content = {'Success' : f'{current_user.username} logged in'}
+    return content, status.HTTP_200_OK
+
+@app.route('/api/logout')
+@auth.login_required
+def logout():
+    print(g.user)
+    print(current_user)
+    # username = current_user.username
+    logout_user()
+    g.user = None
+    content = {'Success' : 'logged out'}
+    return content, status.HTTP_200_OK
 
 @app.route('/api/token')
 @auth.login_required
@@ -144,7 +161,7 @@ def create_lobby():
 @app.route('/api/lobby/<int:lobby_id>/add-user/', methods=['POST'])
 @auth.login_required
 def add_user_to_lobby(lobby_id):    
-    
+    print(g.user)
     if request.method == 'POST':
 
         # verify that TO is attempting to access lobby
@@ -157,6 +174,8 @@ def add_user_to_lobby(lobby_id):
             if uid != lobby.to_id:
                 key = 'Unauthorized'
                 val = f'{g.user.username} cannot add entrants to this lobby'
+                content = {key : val}
+                return content, status.HTTP_401_UNAUTHORIZED
 
         except NotFound as e:
             key = str(e).split(':')[0]
