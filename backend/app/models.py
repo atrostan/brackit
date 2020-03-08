@@ -26,23 +26,26 @@ class Lobby(db.Model):
 	__tablename__ = 'lobby'
 	id = db.Column(db.Integer, primary_key=True)
 	tournament_name = db.Column(db.String(64))
-	tournament_organizer = db.Column(db.Integer, db.ForeignKey('user.id'))
+	to_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	# entrants_id = db.Column()
+	to = db.relationship('User', uselist=False, foreign_keys=[to_id])
+	# entrants_ids = db.relationship('User', backref='lobby', uselist=True)
 
 	# impose a unique constraint on lobbies using the TO AND Tname cols
 	__table_args__ = (
 		db.UniqueConstraint(
 			'tournament_name', 
-			'tournament_organizer', 
+			'to_id', 
 			name='_tournament_org_name_uc'
 		),
 	)
 
-	entrants = db.relationship('User', backref='lobby', lazy=True)
 
 class User(UserMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	role = db.Column(db.String(10))
 	username = db.Column(db.String(64), index=True, unique=True)
+	current_seed = db.Column(db.Integer,)
 	email = db.Column(db.String(120), index=True, unique=True)
 	password_hash = db.Column(db.String(128))
 	posts = db.relationship('Post', backref='author', lazy='dynamic')
@@ -50,6 +53,9 @@ class User(UserMixin, db.Model):
 	last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 	brackets = db.relationship('Bracket', secondary=bracket_entrants,
 							backref='user_brackets', lazy=True)
+
+	lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
+	lobby = db.relationship('Lobby', backref='entrants', foreign_keys=[lobby_id])
 	# match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
 	#     nullable=True)
 

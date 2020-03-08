@@ -44,9 +44,13 @@ from tournament import (
 )
 from flask import request
 from werkzeug.urls import url_parse
+from werkzeug.exceptions import NotFound
 from app import db
 from app.forms import RegistrationForm
 from datetime import datetime
+import sqlite3
+from sqlalchemy import exc
+
 
 from flask_httpauth import HTTPBasicAuth
 auth = HTTPBasicAuth()
@@ -57,10 +61,12 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
 
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
+# @app.route('/logout')
+# def logout():
+#     user = g.user.username
+#     logout_user()
+#     content
+#     return redirect(url_for('index'))
 
 # validation of user credentials - callback invoked whenever 
 # @auth.login_required decorator is used
@@ -92,10 +98,12 @@ def new_user():
     db.session.commit()
     return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
 
+
 # user login endpt
 @app.route('/api/login')
 @auth.login_required
 def user_login():
+    login_user(g.user)
     return jsonify({ 'data': 'Hello, %s!' % g.user.username })
 
 @app.route('/api/token')
@@ -108,19 +116,108 @@ def get_auth_token():
 @auth.login_required
 def create_lobby():
     if request.method == 'POST':
-        TO = g.user.username
+        to_id = g.user.id
         tournament_name = request.json.get('tournament_name')
 
         lobby = LobbyModel(
             tournament_name=tournament_name,
-            tournament_organizer=TO,
+            to_id=to_id,
         )
 
-        db.session.add(lobby); db.session.commit()
-        content = {
+        try:
+            db.session.add(lobby) 
+            db.session.commit()
+            content = {
             'Lobby Created': f'Lobby created for tournament: {tournament_name}'
-        }
-        return content, status.HTTP_201_CREATED
+            }
+            return content, status.HTTP_201_CREATED
+
+        except exc.IntegrityError:
+            key = 'Unique Constraint Failed'
+            val = \
+                f'User \"{to_id}\" already created tournament \"{tournament_name}\"'
+            content = {
+                key : val 
+            }
+            return content, status.HTTP_406_NOT_ACCEPTABLE
+
+@app.route('/api/lobby/<int:lobby_id>/add-user/', methods=['POST'])
+@auth.login_required
+def add_user_to_lobby(lobby_id):    
+    
+    if request.method == 'POST':
+
+        # verify that TO is attempting to access lobby
+        uid = g.user.id
+        # print(f'user whose tryna add {uid}')
+        # print(f'{vars(current_user)}')
+
+        try:
+            lobby = LobbyModel.query.filter_by(id=lobby_id).first_or_404()
+            if uid != lobby.to_id:
+                key = 'Unauthorized'
+                val = f'{g.user.username} cannot add entrants to this lobby'
+
+        except NotFound as e:
+            key = str(e).split(':')[0]
+            val = f'lobby {lobby_id} does not exist'
+            content = {key : val}
+            return content, status.HTTP_404_NOT_FOUND
+
+        name = request.json.get('username')
+        role = request.json.get('role')
+        seed = request.json.get('seed')
+
+        if role == 'User':
+            try:
+                # get user id
+                user = \
+                    UserModel \
+                        .query \
+                        .filter_by(username=name, role=role) \
+                        .first_or_404()
+                user.current_seed = seed
+                lobby.entrants.append(user)
+                db.session.commit()
+
+                key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
+                content = {key : val}
+
+                return content, status.HTTP_202_ACCEPTED
+
+            except NotFound as e:
+                key = str(e).split(':')[0]
+                val = \
+                    f'{role} {name} not found'
+                content = {key : val}
+                return content, status.HTTP_404_NOT_FOUND
+
+        elif role == 'Guest':
+            # create Guest user
+            # check that username isn't taken
+            if UserModel.query.filter_by(username=name).first() is None:
+                user = UserModel(username=name, role=role, current_seed=seed)
+                db.session.add(user)
+                lobby.entrants.append(user)
+                db.session.commit()
+
+                key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
+                content = {key : val}
+
+                return content, status.HTTP_202_ACCEPTED
+
+            else:
+                key = 'Invalid Username'
+                val = \
+                    f'{name} Already Taken'
+                content = {key : val}
+                return content, status.HTTP_409_CONFLICT
+        
+        # key = 'Success'
+        # if role == 'Guest': val = f'created {role} user {name}'
+        # else: val = f'added {role} {name} to lobby {1}'
+        # content = {key : val}
+        # return content, status.HTTP_200_OK
 
 # tournament creation endpoint
 @app.route('/api/created-tournaments/', methods=['GET', 'POST'])
@@ -274,6 +371,13 @@ def match(id):
     match_schema = MatchSchema()
     match = MatchModel.query.filter_by(id=id).first_or_404()
     dump_data = match_schema.dump(match)
+    return dump_data
+
+@app.route('/api/lobby/<int:id>')
+def lobby(id):
+    lobby_schema = LobbySchema()
+    lobby = LobbyModel.query.filter_by(id=id).first_or_404()
+    dump_data = lobby_schema.dump(lobby)
     return dump_data
 
 
