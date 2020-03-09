@@ -15,17 +15,31 @@ from itsdangerous import (
 )
 
 # many to many relationship between User and Bracket
-bracket_entrants = db.Table('bracket_entrants',
-							db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
-									primary_key=True),
-							db.Column('bracket_id', db.Integer, db.ForeignKey('bracket.id'),
-									primary_key=True)
-							)
+bracket_entrants = \
+	db.Table(
+		'bracket_entrants',
+		db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
+			primary_key=True),
+		db.Column('bracket_id', db.Integer, db.ForeignKey('bracket.id'),
+			primary_key=True)
+	)
+
+# many to many relationship between Users, Lobbies, and Seeds
+lobby_seeds = \
+	db.Table(
+		'lobby_seeds',
+		db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
+			primary_key=True),
+		db.Column('lobby_id', db.Integer, db.ForeignKey('lobby.id'),
+			primary_key=True),
+		db.Column('seed', db.Integer)
+	)
 
 class Lobby(db.Model):
 	__tablename__ = 'lobby'
 	id = db.Column(db.Integer, primary_key=True)
 	tournament_name = db.Column(db.String(64))
+	tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
 	to_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 	# entrants_id = db.Column()
 	to = db.relationship('User', uselist=False, foreign_keys=[to_id])
@@ -45,7 +59,6 @@ class User(UserMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	role = db.Column(db.String(10))
 	username = db.Column(db.String(64), index=True, unique=True)
-	current_seed = db.Column(db.Integer,)
 	email = db.Column(db.String(120), index=True, unique=True)
 	password_hash = db.Column(db.String(128))
 	posts = db.relationship('Post', backref='author', lazy='dynamic')

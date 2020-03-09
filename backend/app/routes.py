@@ -195,7 +195,6 @@ def add_user_to_lobby(lobby_id):
                         .query \
                         .filter_by(username=name, role=role) \
                         .first_or_404()
-                user.current_seed = seed
                 lobby.entrants.append(user)
                 db.session.commit()
 
@@ -215,7 +214,7 @@ def add_user_to_lobby(lobby_id):
             # create Guest user
             # check that username isn't taken
             if UserModel.query.filter_by(username=name).first() is None:
-                user = UserModel(username=name, role=role, current_seed=seed)
+                user = UserModel(username=name, role=role,)
                 db.session.add(user)
                 lobby.entrants.append(user)
                 db.session.commit()

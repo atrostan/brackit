@@ -1,8 +1,8 @@
 """commit message
 
-Revision ID: d2a8ed7fa98c
+Revision ID: 344eecb9892d
 Revises: 
-Create Date: 2020-03-08 14:58:18.914419
+Create Date: 2020-03-09 18:27:13.938370
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd2a8ed7fa98c'
+revision = '344eecb9892d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,10 +35,20 @@ def upgrade():
     op.create_table('lobby',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('tournament_name', sa.String(length=64), nullable=True),
+    sa.Column('tournament_id', sa.Integer(), nullable=True),
     sa.Column('to_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['to_id'], ['user.id'], ),
+    sa.ForeignKeyConstraint(['tournament_id'], ['tournament.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('tournament_name', 'to_id', name='_tournament_org_name_uc')
+    )
+    op.create_table('lobby_seeds',
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('lobby_id', sa.Integer(), nullable=False),
+    sa.Column('seed', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['lobby_id'], ['lobby.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('user_id', 'lobby_id')
     )
     op.create_table('match',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -89,7 +99,6 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('role', sa.String(length=10), nullable=True),
     sa.Column('username', sa.String(length=64), nullable=True),
-    sa.Column('current_seed', sa.Integer(), nullable=True),
     sa.Column('email', sa.String(length=120), nullable=True),
     sa.Column('password_hash', sa.String(length=128), nullable=True),
     sa.Column('about_me', sa.String(length=140), nullable=True),
@@ -114,6 +123,7 @@ def downgrade():
     op.drop_table('post')
     op.drop_index(op.f('ix_match_uuid'), table_name='match')
     op.drop_table('match')
+    op.drop_table('lobby_seeds')
     op.drop_table('lobby')
     op.drop_table('bracket_entrants')
     op.drop_table('bracket')
