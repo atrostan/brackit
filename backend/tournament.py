@@ -41,7 +41,7 @@ class Tournament:
 
         # tournament organizer id
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
-
+        print(o_id)
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
             name = tournament_name,
@@ -52,8 +52,8 @@ class Tournament:
         
         # post this tournament's bracket to db
         self.bracket.post_to_db(t_model)
-
-        return True
+        t_id = TournamentModel.query.filter_by(name=tournament_name).first_or_404().id
+        return t_id
 
 
 class Bracket:
@@ -110,11 +110,6 @@ class Bracket:
                 self.rounds.append(Round(i, self, int(
                     self.rounds[self.numLosersRounds + i-1].numMatches/2), isWinners=False))
 
-        #for i in range(1, self.numWinnersRounds+1):
-        #    self.rounds.append(Round(i, self, isWinners=True))
-#        for i in range(1, self.numLosersRounds+1):
-#            self.rounds.append(Round(i, self, isWinners=False))
-
         for i in range(0, len(self.rounds)):
             self.rounds[i].handleProgression()
 
@@ -155,28 +150,33 @@ class Round:
         # post all the round's matches  
         for match in self.matches:
             match.post_to_db(r_model)
-        
-        # post all the self references winner/loserPlaysInMatch
-        # for match in self.matches:
-        #     match.post_self_refs(r_model)
-
-        # now reference all of the round's matches in matches foreign key 
         return
 
 
     def handleProgression(self):
         if (self.number == self.bracket.numWinnersRounds and 
             self.isWinners == True):
+                
             return
 
         elif (self.number == self.bracket.numWinnersRounds - 1 and 
                 self.isWinners == True):
             # TODO insert logic for grand finals reset
+            print(self.number)
+            
+            r_idx = self.bracket.numWinnersRounds - 1
+            
+            self.matches[0].winnerPlaysInMatch(
+                self.bracket.rounds[r_idx].matches[0])
+            self.matches[0].loserPlaysInMatch(
+                self.bracket.rounds[r_idx].matches[0])  
             return
 
         for i in range(0, len(self.matches)):
 
             if (self.isWinners == True):
+                
+
                 r_idx = self.number # round index
                 m_idx = int(math.floor(i / 2)) # match index
                 self.matches[i].winnerPlaysInMatch(
@@ -203,10 +203,10 @@ class Round:
                     #placeInLosers += 2
 
             if (self.isWinners == False):
+                        
                 ## place winner of losers finals in grand finals
-
                 if self.number == self.bracket.numLosersRounds:
-                    r_idx = self.bracket.numWinnersRounds
+                    r_idx = self.bracket.numWinnersRounds - 2
                     m_idx = i
                     self.matches[i].winnerPlaysInMatch(
                         self.bracket.rounds[r_idx].matches[m_idx])

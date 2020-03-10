@@ -5,8 +5,10 @@ from flask import (
     redirect, 
     render_template, 
     url_for,
-    jsonify
+    jsonify, 
+    session
 )
+from flask_api import status
 from app import app
 from app.forms import (
     EditProfileForm,
@@ -21,17 +23,22 @@ from flask_login import (
 )
 
 from app.models import Bracket as BracketModel
+from app.models import Lobby as LobbyModel
 from app.models import Match as MatchModel
 from app.models import Round as RoundModel
 from app.models import Tournament as TournamentModel
 from app.models import User as UserModel
+# from app.models import LobbySeed as LobbySeedModel
 
 from app.models import (
     BracketSchema,
+    LobbySchema,
     MatchSchema,
     RoundSchema,
     TournamentSchema,
     UserSchema,
+    LobbySeedSchema,
+    LobbySeed
 )
 
 from tournament import (
@@ -39,30 +46,19 @@ from tournament import (
     Tournament,
     Match
 )
+
 from flask import request
 from werkzeug.urls import url_parse
+from werkzeug.exceptions import NotFound
 from app import db
 from app.forms import RegistrationForm
 from datetime import datetime
-
+from sqlalchemy import exc
 from flask_httpauth import HTTPBasicAuth
-auth = HTTPBasicAuth()
 
-# @app.route('/edit_profile', methods=['GET', 'POST'])
-# @login_required
-# def edit_profile():
-#     form = EditProfileForm()
-#     if form.validate_on_submit():
-#         current_user.username = form.username.data
-#         current_user.about_me = form.about_me.data
-#         db.session.commit()
-#         flash('Your changes have been saved.')
-#         return redirect(url_for('edit_profile'))
-#     elif request.method == 'GET':
-#         form.username.data = current_user.username
-#         form.about_me.data = current_user.about_me
-#     return render_template('edit_profile.html', title='Edit Profile',
-#                             form=form)
+import sqlite3, json
+
+auth = HTTPBasicAuth()
 
 @app.before_request
 def before_request():
@@ -70,61 +66,15 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
 
-@app.route('/')
-@app.route('/index')
-@login_required
-def index():
-    user = {'username': 'Miguel'}
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland!'
-        },
-        {
-            'author': {'username': 'Susan'},
-            'body': 'The Avengers movie was so cool!'
-        }
-    ]
-    return render_template("index.html", title='Home Page', posts=posts)
+# @app.before_request
+# def load_user():
+#     print(vars(session))
+#     if session["id"]:
+#         user = UserModel.query.filter_by(username=session["id"]).first()
+#     else:
+#         user = {"name": "Guest"}  # Make it better, use an anonymous User instead
 
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('index'))
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         user = User.query.filter_by(username=form.username.data).first()
-#         if user is None or not user.check_password(form.password.data):
-#             flash('Invalid username or password')
-#             return redirect(url_for('login'))
-#         login_user(user, remember=form.remember_me.data)
-#         next_page = request.args.get('next')
-#         if not next_page or url_parse(next_page).netloc != '':
-#             next_page = url_for('index')
-#         return redirect(next_page)
-#     # return jsonify(form.)
-#     return render_template('login.html', title='Sign In', form=form)
-
-
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = UserModel(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+#     g.user = user
 
 # validation of user credentials - callback invoked whenever 
 # @auth.login_required decorator is used
@@ -150,17 +100,32 @@ def new_user():
         abort(400) # missing arguments
     if UserModel.query.filter_by(username = username).first() is not None:
         abort(400) # existing user
-    user = UserModel(username = username, email=email)
+    user = UserModel(username = username, email=email, role='User')
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
     return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
 
+
 # user login endpt
 @app.route('/api/login')
 @auth.login_required
 def user_login():
-    return jsonify({ 'data': 'Hello, %s!' % g.user.username })
+    # print(g.user)
+    login_user(g.user)
+    content = {'Success' : f'{current_user.username} logged in'}
+    return content, status.HTTP_200_OK
+
+@app.route('/api/logout')
+@auth.login_required
+def logout():
+    # print(g.user)
+    # print(current_user)
+    # username = current_user.username
+    logout_user()
+    g.user = None
+    content = {'Success' : 'logged out'}
+    return content, status.HTTP_200_OK
 
 @app.route('/api/token')
 @auth.login_required
@@ -168,10 +133,186 @@ def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({ 'token': token.decode('ascii') })
 
+@app.route('/api/create/lobby/', methods=['POST'])
+@auth.login_required
+def create_lobby():
+    if request.method == 'POST':
+        to_id = g.user.id
+        tournament_name = request.json.get('tournament_name')
+
+        lobby = LobbyModel(
+            tournament_name=tournament_name,
+            to_id=to_id,
+        )
+
+        try:
+            db.session.add(lobby) 
+            db.session.commit()
+            content = {
+            'Lobby Created': f'Lobby created for tournament: {tournament_name}'
+            }
+            return content, status.HTTP_201_CREATED
+
+        except exc.IntegrityError:
+            key = 'Unique Constraint Failed'
+            val = \
+                f'User \"{to_id}\" already created tournament \"{tournament_name}\"'
+            content = {
+                key : val 
+            }
+            return content, status.HTTP_406_NOT_ACCEPTABLE
+
+@app.route('/api/lobby/<int:lobby_id>/add-user/', methods=['POST'])
+@auth.login_required
+def add_user_to_lobby(lobby_id):    
+    # print(g.user)
+    if request.method == 'POST':
+
+        # verify that TO is attempting to access lobby
+        uid = g.user.id
+        # print(f'user whose tryna add {uid}')
+        # print(f'{vars(current_user)}')
+
+        try:
+            lobby = LobbyModel.query.filter_by(id=lobby_id).first_or_404()
+            if uid != lobby.to_id:
+                key = 'Unauthorized'
+                val = f'{g.user.username} cannot add entrants to this lobby'
+                content = {key : val}
+                return content, status.HTTP_401_UNAUTHORIZED
+
+        except NotFound as e:
+            key = str(e).split(':')[0]
+            val = f'lobby {lobby_id} does not exist'
+            content = {key : val}
+            return content, status.HTTP_404_NOT_FOUND
+
+        name = request.json.get('username')
+        role = request.json.get('role')
+        seed = request.json.get('seed')
+
+        # add user to lobby_seeds table
+        if role == 'User':
+            try:
+                # get user id
+                user = \
+                    UserModel \
+                        .query \
+                        .filter_by(username=name, role=role) \
+                        .first_or_404()
+                # set this user's seed in this lobby
+                ls = LobbySeed(user_id=user.id, lobby_id=lobby.id, seed=seed)
+
+                try:
+                    db.session.add(ls)
+                    db.session.commit()
+                except exc.IntegrityError:
+                    db.session.rollback()
+                    key = 'Unique Constraint Failed'
+                    val = \
+                        f'{user} already in {lobby}'
+                    content = {
+                        key : val 
+                    }
+                    return content, status.HTTP_406_NOT_ACCEPTABLE
+                    
+                key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
+                content = {key : val}
+
+                return content, status.HTTP_202_ACCEPTED
+
+            except NotFound as e:
+                key = str(e).split(':')[0]
+                val = \
+                    f'{role} {name} not found'
+                content = {key : val}
+                return content, status.HTTP_404_NOT_FOUND
+
+        elif role == 'Guest':
+            # create Guest user
+            # check that username isn't taken
+            if UserModel.query.filter_by(username=name).first() is None:
+                user = UserModel(username=name, role=role,)
+                db.session.add(user)
+                db.session.commit()
+
+                ls = LobbySeed(user_id=user.id, lobby_id=lobby.id, seed=seed)
+
+                db.session.add(ls)
+                db.session.commit()
+                # set this user's seed in this lobby
+                # print(ls)
+                # lobby.entrants.append(user)
+
+                key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
+                content = {key : val}
+
+                return content, status.HTTP_202_ACCEPTED
+
+            else:
+                key = 'Invalid Username'
+                val = \
+                    f'{name} Already Taken'
+                content = {key : val}
+                return content, status.HTTP_409_CONFLICT
+
+@app.route('/api/lobby/<int:lobby_id>/create-tournament/', methods=['POST'])
+@auth.login_required
+def create_tournament_from_lobby(lobby_id):
+    if request.method == 'POST':
+
+        # verify that TO is attempting to access lobby
+        uid = g.user.id
+        uname = g.user.username
+
+        try:
+            lobby = LobbyModel.query.filter_by(id=lobby_id).first_or_404()
+            if uid != lobby.to_id:
+                key = 'Unauthorized'
+                val = \
+                    f'{g.user.username} cannot create a tournament ' + \
+                    'using this lobby'
+                content = {key : val}
+                return content, status.HTTP_401_UNAUTHORIZED
+
+        except NotFound as e:
+            key = str(e).split(':')[0]
+            val = f'lobby {lobby_id} does not exist'
+            content = {key : val}
+            return content, status.HTTP_404_NOT_FOUND
+
+        # get all competitors in the lobby
+        lobby_entrants = LobbySeed.query.filter_by(lobby_id=lobby_id).all()
+        # construct a list of user_id, seed pairs
+        tuple_list = [(e.user.username, e.seed) for e in lobby_entrants]
+        bracket_type = BracketTypes.DOUBLE_ELIMINATION
+        tournament_name = lobby.tournament_name
+        # contruct a tournament object
+        t = Tournament(tuple_list, bracket_type)
+        t_id = t.post_to_db(tournament_name, uname)
+
+        # set this lobby's tournament_id
+        lobby.tournament_id = t_id
+
+        for r in t.bracket.rounds:
+            for m in r.matches:
+                m.post_self_refs()
+
+        # delete the lobby 
+        LobbyModel.query.filter_by(id=lobby_id).delete()
+        LobbySeed.query.filter_by(lobby_id=lobby_id).delete()
+        db.session.commit()
+
+        key = 'Success'
+        val = f'Created tournament {t_id}'
+        content = {key : val}
+
+        return content, status.HTTP_200_OK
+
 # tournament creation endpoint
 @app.route('/api/created-tournaments/', methods=['GET', 'POST'])
 @auth.login_required
-def create_tournament():
+def create_tournament_1():
 
     # create a new tournament
     if request.method == 'POST':
@@ -184,7 +325,6 @@ def create_tournament():
         tuple_list = [(u, s) for u, s in zip(users, seeds)]
         t = Tournament(tuple_list, bracket_type)
 
-        print(tuple_list)
         t_id = t.post_to_db(tournament_name, TO)
 
         # post self references in matches separately
@@ -195,7 +335,98 @@ def create_tournament():
     else:
         # return jsonify({ 'username': user.username }), 201, {'location': url_for('get_user', id = user.id, _external = True)}
         return
+
+@app.route('/api/match/<int:id>/report-match', methods=['POST'])
+@auth.login_required
+def report_match(id):
+    match = MatchModel.query.filter_by(id=id).first_or_404()
+
+    # ensure that TO is inputting scores and winners
+    if g.user.id != match.get_TO():
+        content = {
+            'Access Denied': 'Only Tournament Organizers can report matches'
+        }
+        return content, status.HTTP_403_FORBIDDEN
+
+    if match.user_1 is None or match.user_2 is None:
+        content = {'This match has not been reached': 'it cannot be reported'}
+        return content, status.HTTP_406_NOT_ACCEPTABLE
+    entrant1_score = request.json.get('entrant1_score')
+    entrant2_score = request.json.get('entrant2_score')
+    winner_id = request.json.get('winner')
+    loser_id = request.json.get('loser')
+    match.user_1_score = entrant1_score
+    match.user_2_score = entrant2_score
+    match.winner = winner_id
+    if match.winner_to is not None:
+        match.winner_to.input_user_to_match(winner_id)
+        db.session.add(match.winner_to)
+    if (match.loser_to is not None):
+        match.loser_to.input_user_to_match(loser_id)
+        db.session.add(match.loser_to)
     
+    db.session.add(match)
+    db.session.commit()
+
+    match_schema = MatchSchema()
+    return match_schema.dump(match)
+
+@app.route('/api/user/<int:id>/winsandlosses')
+def winsandlosses(id):
+    user = UserModel.query.filter_by(id=id).first_or_404()
+    user_brackets = user.brackets
+    wins_losses = []
+    alreadyin = False
+    for bracket in user_brackets:
+        for round in bracket.rounds:
+            for match in round.matches:
+                if match.u1 is None or match.u2 is None or match.winner is None:
+                    continue
+                if match.user_2 == id:
+                    for winloss in wins_losses:
+                        if match.user_1 == winloss.get("User"):
+                            alreadyin = True
+                            if match.user_1 == match.winner:
+                                winloss.update({"Losses": winloss.get("Losses") + 1})
+                            elif match.winner == id:
+                                winloss.update({"Wins": winloss.get("Wins") + 1})
+                    if not alreadyin:
+                        if match.user_1 == match.winner:
+                            wins_losses.append({
+                                        "User": match.user_1, 
+                                        "Wins": 0, 
+                                        "Losses": 1
+                                    })
+                        elif match.winner == id:
+                            wins_losses.append({
+                                        "User": match.user_1, 
+                                        "Wins": 1, 
+                                        "Losses": 0
+                                    })
+                if match.user_1 == id:
+                    for winloss in wins_losses:
+                        if match.user_2 == winloss.get("User"):
+                            alreadyin = True
+                            if match.user_2 == match.winner:
+                                winloss.update({"Losses": winloss.get("Losses") + 1})
+                            elif match.winner == id:
+                                winloss.update({"Wins": winloss.get("Wins") + 1})
+                    if not alreadyin:
+                        if match.user_2 == match.winner:
+                            wins_losses.append({
+                                        "User": match.user_2, 
+                                        "Wins": 0, 
+                                        "Losses": 1
+                                    })
+                        elif match.winner == id:
+                            wins_losses.append({
+                                        "User": match.user_2, 
+                                        "Wins": 1, 
+                                        "Losses": 0
+                                    })
+    return jsonify(wins_losses)
+
+
 @app.route('/api/user/<int:id>')
 def get_user(id):
     user_schema = UserSchema()
@@ -230,3 +461,21 @@ def match(id):
     match = MatchModel.query.filter_by(id=id).first_or_404()
     dump_data = match_schema.dump(match)
     return dump_data
+
+@app.route('/api/lobby/<int:id>')
+def lobby(id):
+    lobby_schema = LobbySchema()
+    lobby = LobbyModel.query.filter_by(id=id).first_or_404()
+    dump_data = lobby_schema.dump(lobby)
+    return dump_data
+
+@app.route('/api/lobby/<int:id>/entrants')
+def lobby_seeds(id):
+    lobby_seed_schema = LobbySeedSchema()
+    lobby = LobbySeed.query.filter_by(lobby_id=id).all()
+    dump_data = [lobby_seed_schema.dump(item) for item in lobby]
+    # print(dump_data)
+    return json.dumps(dump_data)
+
+
+
