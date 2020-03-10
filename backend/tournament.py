@@ -41,7 +41,7 @@ class Tournament:
 
         # tournament organizer id
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
-
+        print(o_id)
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
             name = tournament_name,
@@ -110,11 +110,6 @@ class Bracket:
                 self.rounds.append(Round(i, self, int(
                     self.rounds[self.numLosersRounds + i-1].numMatches/2), isWinners=False))
 
-        #for i in range(1, self.numWinnersRounds+1):
-        #    self.rounds.append(Round(i, self, isWinners=True))
-#        for i in range(1, self.numLosersRounds+1):
-#            self.rounds.append(Round(i, self, isWinners=False))
-
         for i in range(0, len(self.rounds)):
             self.rounds[i].handleProgression()
 
@@ -155,12 +150,6 @@ class Round:
         # post all the round's matches  
         for match in self.matches:
             match.post_to_db(r_model)
-        
-        # post all the self references winner/loserPlaysInMatch
-        # for match in self.matches:
-        #     match.post_self_refs(r_model)
-
-        # now reference all of the round's matches in matches foreign key 
         return
 
 

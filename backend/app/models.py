@@ -24,28 +24,13 @@ bracket_entrants = \
 			primary_key=True)
 	)
 
-# # many to many relationship between Users, Lobbies, and Seeds
-# lobby_seeds = \
-# 	db.Table(
-# 		'lobby_seeds',
-# 		db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
-# 			primary_key=True),
-# 		db.Column('lobby_id', db.Integer, db.ForeignKey('lobby.id'),
-# 			primary_key=True),
-# 		db.Column('seed', db.Integer)
-# 	)
-
 class Lobby(db.Model):
 	__tablename__ = 'lobby'
 	id = db.Column(db.Integer, primary_key=True)
 	tournament_name = db.Column(db.String(64))
 	tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
 	to_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-	# entrants_id = db.Column()
 	to = db.relationship('User', uselist=False, foreign_keys=[to_id])
-	# entrants_ids = db.relationship('User', backref='lobby', uselist=True)
-	# users = db.relationship('User', secondary=lobby_seeds,
-	# 	backref='lobby_users', lazy='select', passive_deletes=True)
 
 	# impose a unique constraint on lobbies using the TO AND Tname cols
 	__table_args__ = (
@@ -66,14 +51,6 @@ class User(UserMixin, db.Model):
 	last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 	brackets = db.relationship('Bracket', secondary=bracket_entrants,
 		backref='user_brackets', lazy=True)
-
-	# lobbies = db.relationship('Lobby', secondary=lobby_seeds,
-	# 	backref='user_lobbies', lazy=True)
-
-	# lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
-	# lobby = db.relationship('Lobby', backref='entrants', foreign_keys=[lobby_id])
-	# match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
-	#     nullable=True)
 
 	def avatar(self, size):
 		digest = md5(self.email.lower().encode('utf-8')).hexdigest()
@@ -111,7 +88,6 @@ class LobbySeed(db.Model):
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
 	lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
 	seed = db.Column(db.Integer)
-	# time_create = db.Column(db.DateTime, nullable=False, default=func.now())
 
 	lobby = db.relationship(Lobby, backref="lobby_seeds")
 	user = db.relationship(User, backref="lobby_seeds")
@@ -121,9 +97,21 @@ class Tournament(db.Model):
 	n_entrants = db.Column(db.Integer)
 	name = db.Column(db.String(64))
 	organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	finished = db.Column(db.Boolean, default=False)
 
 	# 1 to many relationship between tournament and bracket
 	brackets = db.relationship('Bracket', backref='tournament', lazy=True)
+
+	# impose a unique constraint on tournaments using the organizer_id AND 
+	# name columns
+	# i.e. a user can't create have more than 1 tournament going 
+	# __table_args__ = (
+	# 	db.UniqueConstraint(
+	# 		'tournament_name', 
+	# 		'to_id', 
+	# 		name='_tournament_org_name_uc'
+	# 	),
+	# )
 
 class Bracket(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -178,14 +166,14 @@ class Match(db.Model):
 
 	winner_to = db.relationship(
 		"Match",
-		primaryjoin="Match.winner_advance_to==remote(Match.id)",
+		primaryjoin="Match.winner_advance_to == remote(Match.id)",
 		uselist=False, 
 		post_update=True
 	)
 
 	loser_to = db.relationship(
 		'Match',
-		primaryjoin="Match.loser_advance_to==remote(Match.id)",
+		primaryjoin="Match.loser_advance_to == remote(Match.id)",
 		uselist=False, 
 		post_update=True
 	)
@@ -200,8 +188,7 @@ class Match(db.Model):
 		elif self.user_2 == None:
 			self.user_2 = entrant
 		else:
-			print("The match " + str(self.id) +
-                  " is full! Error")
+			print(f"Match {str(self.id)} is full! Error")
 
 	def __repr__(self):
 		return f'<match {self.id} between {self.user_1} and {self.user_2}>'
@@ -220,8 +207,6 @@ class Match(db.Model):
 		return tournament.organizer_id
 
 # marshmellow schemas (needed to de/serialize to json)
-
-
 class UserSchema(SQLAlchemyAutoSchema):
 	class Meta:
 		model = User

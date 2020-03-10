@@ -255,17 +255,64 @@ def add_user_to_lobby(lobby_id):
                     f'{name} Already Taken'
                 content = {key : val}
                 return content, status.HTTP_409_CONFLICT
-        
-        # key = 'Success'
-        # if role == 'Guest': val = f'created {role} user {name}'
-        # else: val = f'added {role} {name} to lobby {1}'
-        # content = {key : val}
-        # return content, status.HTTP_200_OK
+
+@app.route('/api/lobby/<int:lobby_id>/create-tournament/', methods=['POST'])
+@auth.login_required
+def create_tournament_from_lobby(lobby_id):
+    if request.method == 'POST':
+
+        # verify that TO is attempting to access lobby
+        uid = g.user.id
+        uname = g.user.username
+
+        try:
+            lobby = LobbyModel.query.filter_by(id=lobby_id).first_or_404()
+            if uid != lobby.to_id:
+                key = 'Unauthorized'
+                val = \
+                    f'{g.user.username} cannot create a tournament ' + \
+                    'using this lobby'
+                content = {key : val}
+                return content, status.HTTP_401_UNAUTHORIZED
+
+        except NotFound as e:
+            key = str(e).split(':')[0]
+            val = f'lobby {lobby_id} does not exist'
+            content = {key : val}
+            return content, status.HTTP_404_NOT_FOUND
+
+        # get all competitors in the lobby
+        lobby_entrants = LobbySeed.query.filter_by(lobby_id=lobby_id).all()
+        # construct a list of user_id, seed pairs
+        tuple_list = [(e.user.username, e.seed) for e in lobby_entrants]
+        bracket_type = BracketTypes.DOUBLE_ELIMINATION
+        tournament_name = lobby.tournament_name
+        # contruct a tournament object
+        t = Tournament(tuple_list, bracket_type)
+        t_id = t.post_to_db(tournament_name, uname)
+
+        # set this lobby's tournament_id
+        lobby.tournament_id = t_id
+
+        for r in t.bracket.rounds:
+            for m in r.matches:
+                m.post_self_refs()
+
+        # delete the lobby 
+        LobbyModel.query.filter_by(id=lobby_id).delete()
+        LobbySeed.query.filter_by(lobby_id=lobby_id).delete()
+        db.session.commit()
+
+        key = 'Success'
+        val = f'Created tournament {t_id}'
+        content = {key : val}
+
+        return content, status.HTTP_200_OK
 
 # tournament creation endpoint
 @app.route('/api/created-tournaments/', methods=['GET', 'POST'])
 @auth.login_required
-def create_tournament():
+def create_tournament_1():
 
     # create a new tournament
     if request.method == 'POST':

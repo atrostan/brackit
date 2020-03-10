@@ -1,8 +1,8 @@
 """commit message
 
-Revision ID: e1e75a0d404e
+Revision ID: ddb7d60bfa9d
 Revises: 
-Create Date: 2020-03-09 19:41:48.252467
+Create Date: 2020-03-10 15:50:20.897148
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e1e75a0d404e'
+revision = 'ddb7d60bfa9d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,6 +35,7 @@ def upgrade():
     sa.Column('n_entrants', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=64), nullable=True),
     sa.Column('organizer_id', sa.Integer(), nullable=True),
+    sa.Column('finished', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['organizer_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
