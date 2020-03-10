@@ -24,16 +24,16 @@ bracket_entrants = \
 			primary_key=True)
 	)
 
-# many to many relationship between Users, Lobbies, and Seeds
-lobby_seeds = \
-	db.Table(
-		'lobby_seeds',
-		db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
-			primary_key=True),
-		db.Column('lobby_id', db.Integer, db.ForeignKey('lobby.id'),
-			primary_key=True),
-		db.Column('seed', db.Integer)
-	)
+# # many to many relationship between Users, Lobbies, and Seeds
+# lobby_seeds = \
+# 	db.Table(
+# 		'lobby_seeds',
+# 		db.Column('user_id', db.Integer, db.ForeignKey('user.id'), 
+# 			primary_key=True),
+# 		db.Column('lobby_id', db.Integer, db.ForeignKey('lobby.id'),
+# 			primary_key=True),
+# 		db.Column('seed', db.Integer)
+# 	)
 
 class Lobby(db.Model):
 	__tablename__ = 'lobby'
@@ -44,6 +44,8 @@ class Lobby(db.Model):
 	# entrants_id = db.Column()
 	to = db.relationship('User', uselist=False, foreign_keys=[to_id])
 	# entrants_ids = db.relationship('User', backref='lobby', uselist=True)
+	# users = db.relationship('User', secondary=lobby_seeds,
+	# 	backref='lobby_users', lazy='select', passive_deletes=True)
 
 	# impose a unique constraint on lobbies using the TO AND Tname cols
 	__table_args__ = (
@@ -54,21 +56,22 @@ class Lobby(db.Model):
 		),
 	)
 
-
 class User(UserMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	role = db.Column(db.String(10))
 	username = db.Column(db.String(64), index=True, unique=True)
 	email = db.Column(db.String(120), index=True, unique=True)
 	password_hash = db.Column(db.String(128))
-	posts = db.relationship('Post', backref='author', lazy='dynamic')
 	about_me = db.Column(db.String(140))
 	last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 	brackets = db.relationship('Bracket', secondary=bracket_entrants,
-							backref='user_brackets', lazy=True)
+		backref='user_brackets', lazy=True)
 
-	lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
-	lobby = db.relationship('Lobby', backref='entrants', foreign_keys=[lobby_id])
+	# lobbies = db.relationship('Lobby', secondary=lobby_seeds,
+	# 	backref='user_lobbies', lazy=True)
+
+	# lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
+	# lobby = db.relationship('Lobby', backref='entrants', foreign_keys=[lobby_id])
 	# match_id = db.Column(db.Integer, db.ForeignKey('match.id'),
 	#     nullable=True)
 
@@ -101,16 +104,17 @@ class User(UserMixin, db.Model):
 		user = User.query.get(data['id'])
 		return user
 
+class LobbySeed(db.Model):
+	__tablename__ = 'lobby_seeds'
 
-class Post(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	body = db.Column(db.String(140))
-	timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	id = db.Column('id', db.Integer, primary_key=True)
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
+	lobby_id = db.Column(db.Integer, db.ForeignKey('lobby.id'))
+	seed = db.Column(db.Integer)
+	# time_create = db.Column(db.DateTime, nullable=False, default=func.now())
 
-	def __repr__(self):
-		return f'<Post {self.body}>'
-
+	lobby = db.relationship(Lobby, backref="lobby_seeds")
+	user = db.relationship(User, backref="lobby_seeds")
 
 class Tournament(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -120,9 +124,6 @@ class Tournament(db.Model):
 
 	# 1 to many relationship between tournament and bracket
 	brackets = db.relationship('Bracket', backref='tournament', lazy=True)
-	# def __repr__(self):
-	#     return f'<Tournament {self.name}>'
-
 
 class Bracket(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -254,6 +255,13 @@ class MatchSchema(SQLAlchemyAutoSchema):
 class LobbySchema(SQLAlchemyAutoSchema):
 	class Meta:
 		model = Lobby
+		# include_relationships = True
+		load_instance = True  # Optional: deserialize to model instances
+
+class LobbySeedSchema(SQLAlchemyAutoSchema):
+	class Meta:
+		model = LobbySeed
+		many = True
 		include_relationships = True
 		load_instance = True  # Optional: deserialize to model instances
 

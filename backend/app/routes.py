@@ -28,6 +28,7 @@ from app.models import Match as MatchModel
 from app.models import Round as RoundModel
 from app.models import Tournament as TournamentModel
 from app.models import User as UserModel
+# from app.models import LobbySeed as LobbySeedModel
 
 from app.models import (
     BracketSchema,
@@ -36,6 +37,8 @@ from app.models import (
     RoundSchema,
     TournamentSchema,
     UserSchema,
+    LobbySeedSchema,
+    LobbySeed
 )
 
 from tournament import (
@@ -43,17 +46,18 @@ from tournament import (
     Tournament,
     Match
 )
+
 from flask import request
 from werkzeug.urls import url_parse
 from werkzeug.exceptions import NotFound
 from app import db
 from app.forms import RegistrationForm
 from datetime import datetime
-import sqlite3
 from sqlalchemy import exc
-
-
 from flask_httpauth import HTTPBasicAuth
+
+import sqlite3, json
+
 auth = HTTPBasicAuth()
 
 @app.before_request
@@ -107,7 +111,7 @@ def new_user():
 @app.route('/api/login')
 @auth.login_required
 def user_login():
-    print(g.user)
+    # print(g.user)
     login_user(g.user)
     content = {'Success' : f'{current_user.username} logged in'}
     return content, status.HTTP_200_OK
@@ -115,8 +119,8 @@ def user_login():
 @app.route('/api/logout')
 @auth.login_required
 def logout():
-    print(g.user)
-    print(current_user)
+    # print(g.user)
+    # print(current_user)
     # username = current_user.username
     logout_user()
     g.user = None
@@ -161,7 +165,7 @@ def create_lobby():
 @app.route('/api/lobby/<int:lobby_id>/add-user/', methods=['POST'])
 @auth.login_required
 def add_user_to_lobby(lobby_id):    
-    print(g.user)
+    # print(g.user)
     if request.method == 'POST':
 
         # verify that TO is attempting to access lobby
@@ -187,6 +191,7 @@ def add_user_to_lobby(lobby_id):
         role = request.json.get('role')
         seed = request.json.get('seed')
 
+        # add user to lobby_seeds table
         if role == 'User':
             try:
                 # get user id
@@ -195,9 +200,22 @@ def add_user_to_lobby(lobby_id):
                         .query \
                         .filter_by(username=name, role=role) \
                         .first_or_404()
-                lobby.entrants.append(user)
-                db.session.commit()
+                # set this user's seed in this lobby
+                ls = LobbySeed(user_id=user.id, lobby_id=lobby.id, seed=seed)
 
+                try:
+                    db.session.add(ls)
+                    db.session.commit()
+                except exc.IntegrityError:
+                    db.session.rollback()
+                    key = 'Unique Constraint Failed'
+                    val = \
+                        f'{user} already in {lobby}'
+                    content = {
+                        key : val 
+                    }
+                    return content, status.HTTP_406_NOT_ACCEPTABLE
+                    
                 key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
                 content = {key : val}
 
@@ -216,8 +234,15 @@ def add_user_to_lobby(lobby_id):
             if UserModel.query.filter_by(username=name).first() is None:
                 user = UserModel(username=name, role=role,)
                 db.session.add(user)
-                lobby.entrants.append(user)
                 db.session.commit()
+
+                ls = LobbySeed(user_id=user.id, lobby_id=lobby.id, seed=seed)
+
+                db.session.add(ls)
+                db.session.commit()
+                # set this user's seed in this lobby
+                # print(ls)
+                # lobby.entrants.append(user)
 
                 key = 'Added'; val = f'{role} {name} to lobby {lobby_id}'
                 content = {key : val}
@@ -253,7 +278,6 @@ def create_tournament():
         tuple_list = [(u, s) for u, s in zip(users, seeds)]
         t = Tournament(tuple_list, bracket_type)
 
-        print(tuple_list)
         t_id = t.post_to_db(tournament_name, TO)
 
         # post self references in matches separately
@@ -398,6 +422,13 @@ def lobby(id):
     dump_data = lobby_schema.dump(lobby)
     return dump_data
 
+@app.route('/api/lobby/<int:id>/entrants')
+def lobby_seeds(id):
+    lobby_seed_schema = LobbySeedSchema()
+    lobby = LobbySeed.query.filter_by(lobby_id=id).all()
+    dump_data = [lobby_seed_schema.dump(item) for item in lobby]
+    # print(dump_data)
+    return json.dumps(dump_data)
 
 
 
