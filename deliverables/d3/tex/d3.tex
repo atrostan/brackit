@@ -170,8 +170,7 @@ to be expanded on.
 Another feature we plan on implementing is an easy way for users to enter tournaments via their pre-registered \texttt{Brackit} accounts,
 such as a QR code for a given tournament, which when read, automatically enters the user into the tournament lobby. Our current 
 system design supports this feature very well, as we would simply need to add frontend functionality to create a QR code from the 
-\texttt{/api/lobby/<int:lobby_id>/add-user/} endpoint, as well as frontend functionality to read the QR code and execute the API endpoint.
-
+\texttt{/api/lobby/<int:lobby\_id>/add-user/} endpoint, as well as frontend functionality to read the QR code and execute the API endpoint.
 A specific implementation challenge is handling how each match knows who is the entrant which is playing 
 in said match. This is called progression - for matches in the initial rounds, this is trivial as 
 the entrants are simply placed into the matches when the Tournament is instantiated, but as the tournament
