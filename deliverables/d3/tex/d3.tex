@@ -20,6 +20,10 @@
 \usepackage{bookmark}
 \usepackage{enumitem}
 \usepackage{multicol}
+\usepackage{mathtools}
+\usepackage{lipsum}  
+
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \usepackage[figuresleft]{rotating}
 
 \begin{document}
@@ -75,7 +79,8 @@
 % identify, describe, and justify the architecture of your project (architectural style, design patterns) \\
 % Outcome is a system architecture that supports the functional goals and non-functional attributes of your project 
 \subsection{Description}
-In developing \texttt{Brackit}, we set out to address an urgent need by tournament attendants and organizers to visualize, manage, and interact with double elimination
+\subsubsection{Functional \& Non-Functional Requirements}
+In developing \texttt{Brackit}, we set out to address an urgent need by tournament organizers and attendants to visualize, manage, and interact with double elimination
 brackets on their mobile devices. At a high level, we committed to developing a product that will meet the following \textbf{functional requirements}:
 \begin{enumerate}
     \item{Tournament Organizers (TO's) can create, host, maintain, and visualize double elimination brackets.}
@@ -87,28 +92,50 @@ brackets on their mobile devices. At a high level, we committed to developing a 
     \end{itemize}
     }
 \end{enumerate}
-In terms of \textbf{non-functional requirements}, we believed \texttt{Brackit} be \textit{usable} on mobile devices. \texttt{Brackit} users should be able to:
+In terms of \textbf{non-functional requirements}, we believed \texttt{Brackit} should be \textit{usable} on mobile devices. \texttt{Brackit} users should be able to:
 \begin{itemize}
-    \item{View and access all submodules (Brackets, Rounds, Matches) of a tournament on an Android device}
-    \item{Seamlessly enter tournament competitors to brackets on an Android device}
+    \item{View and access all components (Brackets, Rounds, Matches) of a tournament on an Android device.}
+    \item{Seamlessly enter tournament competitors to brackets on an Android device.}
 \end{itemize}
-
+% \subsubsection{Components and Connectors}
 Conceptually, \texttt{Brackit} needed to support the creation and maintenance of the following \textit{components}:
 \begin{itemize}
-    \item{\textit{Tournament}: The highest level abstraction utilized in Bracket creation. A tournament acts a \textit{container} for brackets.}
+    \item{\textit{Tournament}: The highest level of abstraction utilized in Bracket creation. A tournament acts a \textit{container} for brackets. \texttt{Brackit} supports double-elimination tournaments, where competitors cease to be eligible to win the tournament after losing two matches \cite{wiki:det}.}
     \item{\textit{Bracket}: Given the number of entrants and their corresponding seeds (ranks), 
-    Double elimination brackets dictate competitor matchups and the progression of competitors through the Winners and Losers brackets }
-    
+    Double elimination brackets dictate competitor matchups and the progression of competitors through the Winners and Losers brackets. 
+    Brackets contain 
+    a dynamic list of Rounds. }
+    \item{\textit{Round}: Rounds contain a dynamic list of Matches.}
+    \item{\textit{Match}: Matches pair the strongest and weakest (according to rank) players in a Round.}
 \end{itemize}  
-\subsection{Justification}
-To deve
+% To develop the interface between each of the components mentioned above, we decided to implement the following \textit{connectors}:
+% \begin{itemize}
+%     \item{}
+    
+% \end{itemize}
+\subsection{Justification of Architectural Style Choices}
+\subsubsection{Object-Oriented Architectural Style}
+As described above, a Double Elimination Tournament mobile management application must maintain a set of well-defined entities (i.e. a Tournaments, Brackets, Rounds, and Matches) with predetermined relationships. For example, given $n$ competitors, a correct double elimination tournament will contain $\ceil{\lg n}$ rounds in the Winners bracket and $\ceil{\lg n} + 
+\ceil{\lg \lg n}$ rounds in the Losers bracket. In addition, the progression of competitors can be calculated at the creation of a tournament, and handling this progression follows a deterministic approach (e.g. The winner of Match 1 of Round 1 in the Winners Bracket will always progress to Match 1 Round 2 in the Winners Bracket - see Figure \ref{fig:deb} for an illustrative example).\\
+Therefore, to encourage an efficient decomposition of the algorithm and entities associated with Double Elimination Tournament creation, we decided to model the architecture of \texttt{Brackit} using an \textbf{Object-Oriented} (OO) architecture. 
+Specifically, we chose to model each of the components of our application as objects. This allowed us to encapsulate the expected behaviour of each of the tournament objects while maintain a valid separation of concerns. To further explicate the validity of the choice of an OO architecture for \texttt{Brackit} consider the dynamic nature of Tournament creation.\\
+A tournament bracket acts as a container for rounds, which themselves act as containers for matches.
+To handle the progression of a competition, the data associated with each match (i.e. which competitor won or lost) should be self contained within the match object instantiation, but also must be accessible through attributes of that object. Therefore defining the Match construct as an object allows the definition of self-contained class methods and attributes that achieve these intended behaviours.
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=12cm]{../diagrams/double_elim_bracket_comp.pdf}
+        \caption{Seeded Double Elimination Tournament Chart for 8 competitors. (Adapted from \cite{se:tba})}
+        \label{fig:deb}
+        \end{figure}
+\subsubsection{Client-Server Architectural Style}
+\lipsum[2-4]
 \clearpage
 \subsection{Architectural Diagrams}
 \vfill
 \begin{center}
     \begin{figure}[htp]
         \centering
-        \includegraphics[width=18cm]{../diagrams/component_diag.pdf}
+        \includegraphics[width=14.5cm]{../diagrams/component_diag.pdf}
         \caption{\texttt{Brackit - }\href{https://sparxsystems.com/resources/tutorials/uml2/index.html}{UML 2} Architectural Component Diagram}
         \end{figure}
 \end{center}
@@ -117,7 +144,7 @@ To deve
 \begin{center}
     \begin{figure}[h]
         \centering
-        \includegraphics[width=19cm]{../diagrams/er.pdf}
+        \includegraphics[width=12.5cm]{../diagrams/er_compressed.pdf}
         \caption{\texttt{Brackit - } Entity Relationship (ER) Diagram}
         \end{figure}
 \end{center}
@@ -145,7 +172,7 @@ To deve
 
 
 \clearpage
-\cite{wiki:xxx}
+% \cite{wiki:xxx}
 \bibliographystyle{unsrt}
 \bibliography{ref.bib}
 
