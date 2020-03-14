@@ -165,12 +165,26 @@ the number of rounds is deterministic with respect to the number of entrants and
 So far, \texttt{Brackit} only supports double elimination brackets, but this can be expanded easily by the addition of special cases in the Bracket constructor. An alternative approach would be to create an abstract Bracket
 class with each bracket type as an implementation of the abstract Bracket class. This may allow for 
 code that is easier to read and iterate, and would be worth the refactoring time if this project were 
-to be expanded on.
+to be expanded on. 
+
+Another feature we plan on implementing is an easy way for users to enter tournaments via their pre-registered \texttt{Brackit} accounts,
+such as a QR code for a given tournament, which when read, automatically enters the user into the tournament lobby. Our current 
+system design supports this feature very well, as we would simply need to add frontend functionality to create a QR code from the 
+\texttt{/api/lobby/<int:lobby_id>/add-user/} endpoint, as well as frontend functionality to read the QR code and execute the API endpoint.
 
 A specific implementation challenge is handling how each match knows who is the entrant which is playing 
 in said match. This is called progression - for matches in the initial rounds, this is trivial as 
 the entrants are simply placed into the matches when the Tournament is instantiated, but as the tournament
-progresses, $\dots$
+progresses, the client must send data to the backend via a POST request in order to progress the tournament.
+When the results of a match are reported, the system must somehow know where the winner and the loser progresses to.
+One potential solution we explored was to use pointers for each entrant in subsequent matches, where each pointer 
+points to the winner attribute of the previous match which progresses to the subsequent match. However, this 
+solution ran into problems with the SQLAlchemy model, as it became challenging to ensure that as the tournament 
+progressed and the pointers became instantiated with non-null data, that the database reflected these changes. 
+Ultimately, we decided to have two references to two other match objects, loserPlaysInMatch and winnerPlaysInMatch, 
+which reference the match that the loser and winner progress to respectively. This approach simplified database 
+representation, as well as made navigating the bracket easier on the frontend, since one could find subsequent matches
+from a previous match just by inspecting that match object's attributes.
 
 Our backend uses the \href{https://flask.palletsprojects.com/en/1.1.x/}{\texttt{Flask}} python package to expose our bracket and user information to 
 the frontend, as well as \href{https://www.sqlalchemy.org/}{SQLAlchemy} to manage this information in the database. SQLAlchemy provides a \href{https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/}{\texttt{Model}} baseclass that allows us to declare the tournament objects as database tables and a runtime interface by which we interact with our \href{https://www.sqlite.org/index.html}{\texttt{SQLite3}} database. We model each class in our class diagram in \href{https://github.com/alextrosta/brackit/blob/master/backend/app/models.py}{\texttt{models}} module, which creates 
