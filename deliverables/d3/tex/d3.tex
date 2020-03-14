@@ -193,6 +193,18 @@ allows us to easily and safely query the database itself when invoking APIs, and
 retrieval of the specific object being requested. Additionally, these models allow for 
 seamless SQL querying for user data, such as users cross-tournament wins and losses. 
 
+As a consequence of utilizing SQLAlchemy models to model our classes into the database, we ended up with three 
+significant layers; the \texttt{Routes} layer, which is our API facade - the \texttt{Model} layer, and the \texttt{Backend}
+layer, where much of the logic about how brackets are generated and progression is handled is stored. This created some significant
+challenges when designing for decoupling, as in the \texttt{Routes} layer, when we query the table for the requested objects,
+we return not the \texttt{Backend} objects, but the \texttt{Model} objects. In fact, accessing the \texttt{Backend} object
+after instantiation in the \texttt{Routes} layer became a significant challenge, one that we overcame by moving the logic for inputting
+match results straight into the \texttt{Model} layer, as that is the layer which is responsible for the representation of the objects 
+in the database. We experimented with each class in the \texttt{Model} layer containing its corresponding \texttt{Backend} object 
+as an attribute, however because the Tournament object in the \texttt{Backend} instantiates its child objects such as the Bracket, 
+Rounds, and Matches during its own instantiation, it became impossible to map one to the other fully. This problem would be another 
+area of future evolution for our system.
+
 \subsection{Design Patterns}
 \begin{enumerate}
     \item \textit{Facade}
