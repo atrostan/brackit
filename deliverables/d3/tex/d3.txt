@@ -1,0 +1,777 @@
+COMP 3004 - Deliverable #3
+System Architecture and Design
+Brackit - Mobile Tournament Bracket Creation
+Metadata
+Team / App Name: Brackit
+Team member names
+Name
+Jaime Herzog
+Suohong Liu
+Xiyi Liu
+Alex Trostanovsky
+
+Student ID
+101009321
+101002340
+101004577
+100984702
+
+Contents
+Architecture
+1
+Description . . . . . . . . . . . . . . . . . . . . . .
+1.1
+Functional & Non-Functional Requirements
+2
+Justification of Architectural Style Choices . . . .
+2.1
+Object-Oriented Architectural Style . . . .
+2.2
+Client-Server Architectural Style . . . . . .
+3
+Architectural Diagrams . . . . . . . . . . . . . . .
+
+.
+.
+.
+.
+.
+.
+
+2
+2
+2
+2
+2
+3
+4
+
+Design
+1
+Description and Rationalization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+Design Patterns . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+5
+5
+5
+
+Design Diagrams
+
+7
+
+1
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+.
+.
+.
+.
+.
+.
+
+Architecture
+1
+
+Description
+
+1.1
+
+Functional & Non-Functional Requirements
+
+In developing Brackit, we set out to address an urgent need by tournament organizers and attendants to visualize,
+manage, and interact with double elimination brackets on their mobile devices. At a high level, we committed to
+developing a product that will meet the following functional requirements:
+1. Tournament Organizers (TO’s) can create, host, maintain, and visualize double elimination brackets.
+2. Registerd Brackit Users, as well as Guests, can use the application to join created tournaments.
+3. Brackit will store and maintain user profiles that will describe users’ history:
+• Matches won/lost
+• Tournaments entered/created
+In terms of non-functional requirements, we believed Brackit should be usable on mobile devices. Brackit
+users should be able to:
+• View and access all components (Brackets, Rounds, Matches) of a tournament on an Android device.
+• Seamlessly enter tournament competitors to brackets on an Android device.
+Conceptually, Brackit needed to support the creation and maintenance of the following components:
+• Tournament: The highest level of abstraction utilized in Bracket creation. A tournament acts a container for
+brackets. Brackit supports double-elimination tournaments, where competitors cease to be eligible to win the
+tournament after losing two matches [1].
+• Bracket: Given the number of entrants and their corresponding seeds (ranks), Double elimination brackets
+dictate competitor matchups and the progression of competitors through the Winners and Losers brackets.
+Brackets contain a dynamic list of Rounds.
+• Round : Rounds contain a dynamic list of Matches.
+• Match: Matches pair the strongest and weakest (according to rank) players in a Round.
+
+2
+2.1
+
+Justification of Architectural Style Choices
+Object-Oriented Architectural Style
+
+As described above, a Double Elimination Tournament mobile management application must maintain a set of welldefined entities (i.e. a Tournaments, Brackets, Rounds, and Matches) with predetermined relationships. For example,
+given n competitors, a correct double elimination tournament will contain dlg ne rounds in the Winners bracket and
+dlg ne + dlg lg ne rounds in the Losers bracket. In addition, the progression of competitors can be calculated at the
+creation of a tournament, and handling this progression follows a deterministic approach (e.g. The winner of Match
+1 of Round 1 in the Winners Bracket will always progress to Match 1 Round 2 in the Winners Bracket - see Figure
+1 for an illustrative example).
+Therefore, to encourage an efficient decomposition of the algorithm and entities associated with Double Elimination
+Tournament creation, we decided to model the architecture of Brackit using an Object-Oriented (OO) architecture. Specifically, we chose to model each of the components of our application as objects. This allowed us to
+encapsulate the expected behaviour of each of the tournament objects while maintain a valid separation of concerns.
+To further explicate the validity of the choice of an OO architecture for Brackit consider the dynamic nature of
+Tournament creation.
+A tournament bracket acts as a container for rounds, which themselves act as containers for matches. To handle
+the progression of a competition, the data associated with each match (i.e. which competitor won or lost) should
+be self contained within the match object instantiation, but also must be accessible through attributes of that object. Therefore defining the Match construct as an object allows the definition of self-contained class methods and
+attributes that achieve these intended behaviours.
+2
+
+Losers
+Bracket
+
+Match
+
+Winners
+Bracket
+
+Rank of Entrant 1
+1
+Rank of Entrant 2
+8
+L1
+6
+L1 Loser
+
+3
+L3
+5
+4
+
+Winner of
+this Match
+goes to
+Winners
+Bracket
+
+Loser of
+this Match
+comes in
+3rd Place
+
+Champion
+
+L2
+7
+L2 Loser
+
+2
+Winner of Losers Bracket
+
+L3 Loser
+
+Must beat Winner of
+Winners Bracket Twice
+
+Figure 1: Seeded Double Elimination Tournament Chart for 8 competitors. (Adapted from [2])
+2.2
+
+Client-Server Architectural Style
+
+Nam dui ligula, fringilla a, euismod sodales, sollicitudin vel, wisi. Morbi auctor lorem non justo. Nam lacus libero,
+pretium at, lobortis vitae, ultricies et, tellus. Donec aliquet, tortor sed accumsan bibendum, erat ligula aliquet
+magna, vitae ornare odio metus a mi. Morbi ac orci et nisl hendrerit mollis. Suspendisse ut massa. Cras nec
+ante. Pellentesque a nulla. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+Aliquam tincidunt urna. Nulla ullamcorper vestibulum turpis. Pellentesque cursus luctus mauris.
+Nulla malesuada porttitor diam. Donec felis erat, congue non, volutpat at, tincidunt tristique, libero. Vivamus
+viverra fermentum felis. Donec nonummy pellentesque ante. Phasellus adipiscing semper elit. Proin fermentum
+massa ac quam. Sed diam turpis, molestie vitae, placerat a, molestie nec, leo. Maecenas lacinia. Nam ipsum ligula,
+eleifend at, accumsan nec, suscipit a, ipsum. Morbi blandit ligula feugiat magna. Nunc eleifend consequat lorem.
+Sed lacinia nulla vitae enim. Pellentesque tincidunt purus vel magna. Integer non enim. Praesent euismod nunc
+eu purus. Donec bibendum quam in tellus. Nullam cursus pulvinar lectus. Donec et mi. Nam vulputate metus eu
+enim. Vestibulum pellentesque felis eu massa.
+Quisque ullamcorper placerat ipsum. Cras nibh. Morbi vel justo vitae lacus tincidunt ultrices. Lorem ipsum
+dolor sit amet, consectetuer adipiscing elit. In hac habitasse platea dictumst. Integer tempus convallis augue. Etiam
+facilisis. Nunc elementum fermentum wisi. Aenean placerat. Ut imperdiet, enim sed gravida sollicitudin, felis odio
+placerat quam, ac pulvinar elit purus eget enim. Nunc vitae tortor. Proin tempus nibh sit amet nisl. Vivamus quis
+tortor vitae risus porta vehicula.
+
+3
+
+3
+
+Architectural Diagrams
+
+DataAccess
+Android
+
+Tournament
+
+Tournament
+
+«UI»
+Tournament Creation and
+Progression Handling
+
+«infrastructure»
+Security
+
+Derived
+From
+
+Authentication &
+Access Control
+
+DataAccess
+
+«UI»
+Tournament Registration
+
+SHA256
+Password
+Encryption
+
+Lobby
+
+Lobby
+
+«infrastructure»
+Persistence
+
+Persistence
+
+«UI»
+Query Historical
+Performance Data
+
+<<requires>>
+
+DataAccess
+User
+User
+«database»
+SQLite3 DB
+
+Thanks to http://agilemodeling.com/artifacts/componentDiagram.htm
+
+Figure 2: Brackit - UML 2 Architectural Component Diagram
+
+Lobby
+PK
+
+id
+
+lobby_seeds
+PK
+
+id
+
+User
+PK
+
+id
+
+tournament_name
+
+user_id
+
+role
+
+tournament_id
+
+lobby_id
+
+username
+
+to_id
+
+seed
+
+email
+password_hash
+
+Tournament
+PK
+
+id
+
+Bracket
+PK
+
+id
+
+Match
+PK
+
+id
+
+n_entrants
+
+bracket_type
+
+uuid
+
+name
+
+tournament_id
+
+user_1
+
+organizer_id
+
+user_1_score
+
+finished
+
+user_2
+
+Round
+PK
+
+user_2_score
+
+id
+
+winner
+
+number
+
+winner_advance_to
+
+winners
+
+loser_advance_to
+
+Figure 3: Brackit - Entity Relationship (ER) Diagram
+
+4
+
+SQLAlchemy
+
+Design
+1
+
+Description and Rationalization
+
+The Brackit backend was designed primarily to marry extensibility with the correctness of our relatively complex
+domain. The main challenge of the backend’s design is the creation of correct brackets, as well as the maintenance
+of brackets as they progress to completion.
+When we create a Tournament, we create a tournament object in the backend, which itself creates the bracket
+objects. Depending on the bracket type, the appropriate number of rounds are created, with each round containing
+the corresponding number of matches. This is handled automatically because the number of rounds is deterministic
+with respect to the number of entrants and the type of bracket (See Section 2.1).
+So far, Brackit only supports double elimination brackets, but this can be expanded easily by the addition of special
+cases in the Bracket constructor. An alternative approach would be to create an abstract Bracket class with each
+bracket type as an implementation of the abstract Bracket class. This may allow for code that is easier to read and
+iterate, and would be worth the refactoring time if this project were to be expanded on.
+Another feature we plan on implementing is an easy way for users to enter tournaments via their pre-registered
+Brackit accounts, such as a QR code for a given tournament, which when read, automatically enters the user into
+the tournament lobby. Our current system design supports this feature very well, as we would simply need to add
+frontend functionality to create a QR code from the /api/lobby/<int:lobby id>/add-user/ endpoint, as well as
+frontend functionality to read the QR code and execute the API endpoint. A specific implementation challenge
+is handling how each match knows who is the entrant which is playing in said match. This is called progression
+- for matches in the initial rounds, this is trivial as the entrants are simply placed into the matches when the
+Tournament is instantiated, but as the tournament progresses, the client must send data to the backend via a POST
+request in order to progress the tournament. When the results of a match are reported, the system must somehow
+know where the winner and the loser progresses to. One potential solution we explored was to use pointers for
+each entrant in subsequent matches, where each pointer points to the winner attribute of the previous match which
+progresses to the subsequent match. However, this solution ran into problems with the SQLAlchemy model, as it
+became challenging to ensure that as the tournament progressed and the pointers became instantiated with non-null
+data, that the database reflected these changes. Ultimately, we decided to have two references to two other match
+objects, loserPlaysInMatch and winnerPlaysInMatch, which reference the match that the loser and winner progress
+to respectively. This approach simplified database representation, as well as made navigating the bracket easier on
+the frontend, since one could find subsequent matches from a previous match just by inspecting that match object’s
+attributes.
+Our backend uses the Flask python package to expose our bracket and user information to the frontend, as well
+as SQLAlchemy to manage this information in the database. SQLAlchemy provides a Model baseclass that allows us
+to declare the tournament objects as database tables and a runtime interface by which we interact with our SQLite3
+database. We model each class in our class diagram in models module, which creates tables for each class and defines
+the table relationships in an object oriented style. This allows us to easily and safely query the database itself when
+invoking APIs, and enables retrieval of the specific object being requested. Additionally, these models allow for
+seamless SQL querying for user data, such as users cross-tournament wins and losses.
+As a consequence of utilizing SQLAlchemy models to model our classes into the database, we ended up with three
+significant layers; the Routes layer, which is our API facade - the Model layer, and the Backend layer, where much
+of the logic about how brackets are generated and progression is handled is stored. This created some significant
+challenges when designing for decoupling, as in the Routes layer, when we query the table for the requested objects,
+we return not the Backend objects, but the Model objects. In fact, accessing the Backend object after instantiation
+in the Routes layer became a significant challenge, one that we overcame by moving the logic for inputting match
+results straight into the Model layer, as that is the layer which is responsible for the representation of the objects in
+the database. We experimented with each class in the Model layer containing its corresponding Backend object as an
+attribute, however because the Tournament object in the Backend instantiates its child objects such as the Bracket,
+Rounds, and Matches during its own instantiation, it became impossible to map one to the other fully. This problem
+would be another area of future evolution for our system.
+
+2
+
+Design Patterns
+1. Facade
+The Facade pattern intends to provide a unified interface to a set of interfaces in a subsystem. For our backend,
+the API endpoints contained in the routes module constitute our Facade. Each endpoint provides a URL which
+5
+
+the user can access to invoke all necessary interfaces to execute the necessary code in the backend.
+This pattern provides a singular hub through which frontend clients can access backend data, In addition,
+modelling our server as a Facade centralized all exposed endpoints and allowed for ease of use and extensibility.
+2. Singleton
+The Singleton pattern intends to ensure a class has only one instance, and to allow global access to that class.
+The Flask app object leverages the Singleton pattern in its design, as it is instantiated only once when the
+server is started, and is accessed globally throughout the backend. The justification for the use of the Singleton
+pattern for the app object is because the app class itself, when instantiated, is the representation of the Flask
+server instance at compile time, and is how we modify and customize our server, i.e. specifying the database
+schema, or specifying the API endpoints. Additionally, ensuring the app is only instantiated once maintains
+consistency throughout the session, as multiple apps could potentially create multiple duplicate endpoints,
+which would create unintentional behaviour such as the duplication of method invocation.
+
+6
+
+Design Diagrams
+Thanks to http://agilemodeling.com/artifacts/classDiagram.htm#CompositionAssociations
+1..*
+
+Tournament
+bracket
+
+Match
+entrant1 : int
+entrant2 : int
+
+post_to_db()
+1
+
+loserPlayInMatch : int
+matchRound : int
+scoreEntrant1 : int
+
+1..*
+
+scoreEntrant2 : int
+
+Bracket
+bracketType
+
+uuid : string
+
+ceilPlayers : int
+
+winner : int
+
+entrants : list
+
+winnerPlaysInMatch : int
+
+numLosersRounds : int
+
+inputScore()
+
+numTotalRounds : int
+
+loserPlaysInMatch()
+
+numWinnersRounds : int
+
+post_self_refs()
+
+rounds : list
+
+post_to_db()
+
+makeDoubleElimBracket(
+
+proceedToMatch()
+
+post_to_db()
+1
+
+winnerPlaysInMatch()
+1
+
+2
+User
+
+1..*
+Round
+
+brackets : list
+
+bracket : Bracket
+
+email : string
+
+isWinners : Bool
+
+id : int
+
+matches : list
+
+last_seen : Datetime
+
+numMatches : int
+
+password_hash : string
+
+number : int
+
+role : string
+
+handleProgression()
+
+username : string
+
+post_to_db()
+
+1
+
+avatar()
+check_password()
+generate_auth_token()
+set_password()
+verify_auth_token()%3CmxGra
+
+Figure 4: Brackit - UML Class Diagram
+
+7
+
+Create Tournament
+
+Client Side (Kotlin for Android)
+Route
+
+Server Side (Flask, SQLAlchemy)
+
+CreateTournamentActivity
+Kotlin Controller
+
+View
+
+Flask Endpoint
+
+Database
+
+Models
+
+SQLite3
+
+/api/created-tournaments
+Redirect to view
+Controller Interaction
+
+HTTP Post Request to
+/api/created-tournaments
+
+Tournament Object
+Instantiation
+
+Request Abstracted using
+SQLAlchemy's ORM
+
+callback
+Render Response Content
+
+JSON response
+
+View Display
+
+Figure 5: Brackit:
+
+Create Tournament Sequence Diagram
+
+8
+
+Commit and
+Update Session
+
+References
+[1] Wikipedia. Double-elimination tournament — Wikipedia, the free encyclopedia, 6-October-2019. [Online; accessed 14-March-2020].
+[2] candied-orange (https://softwareengineering.stackexchange.com/users/131624/candied orange).
+bracket algorithm. Software Engineering. [Online; accessed 14-March-2020].
+
+9
+
+Tournament
+
+
