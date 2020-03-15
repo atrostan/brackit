@@ -76,18 +76,19 @@
     \end{tabular}
 \end{center}
 \tableofcontents
+
 \clearpage
 \section{Architecture}
 % identify, describe, and justify the architecture of your project (architectural style, design patterns) \\
 % Outcome is a system architecture that supports the functional goals and non-functional attributes of your project 
 \subsection{Description}
 \subsubsection{Functional \& Non-Functional Requirements}
-In developing \texttt{Brackit}, we set out to address an urgent need by tournament organizers and attendants to visualize, manage, and interact with double elimination
+\texttt{Brackit} addresses an urgent need by tournament organizers and attendants to visualize, manage, and interact with double elimination
 brackets on their mobile devices. At a high level, we committed to developing a product that will meet the following \textbf{functional requirements}:
 \begin{enumerate}
     \item{Tournament Organizers (TO's) can create, host, maintain, and visualize double elimination brackets.}
-    \item{Registerd \texttt{Brackit} Users, as well as Guests, can use the application to join created tournaments.}
-    \item{\texttt{Brackit} will store and maintain user profiles that will describe users' history:
+    \item{Registered \texttt{Brackit} Users, as well as Guests, can use the application to join created tournaments.}
+    \item{\texttt{Brackit} will store and maintain user profiles that will describe users' past performance. For example:
     \begin{itemize}
         \item{Matches won/lost}
         \item{Tournaments entered/created}
@@ -102,13 +103,13 @@ In terms of \textbf{non-functional requirements}, we believed \texttt{Brackit} s
 % \subsubsection{Components and Connectors}
 Conceptually, \texttt{Brackit} needed to support the creation and maintenance of the following \textit{components}:
 \begin{itemize}
-    \item{\textit{Tournament}: The highest level of abstraction utilized in Bracket creation. A tournament acts a \textit{container} for brackets. \texttt{Brackit} supports double-elimination tournaments, where competitors cease to be eligible to win the tournament after losing two matches \cite{wiki:det}.}
+    \item{\textit{Tournament}: The highest level of abstraction utilized in Bracket creation. A tournament acts as a \textit{container} for brackets. \texttt{Brackit} supports double-elimination tournaments, where competitors cease to be eligible to win the tournament after losing two matches \cite{wiki:det}.}
     \item{\textit{Bracket}: Given the number of entrants and their corresponding seeds (ranks), 
     Double elimination brackets dictate competitor matchups and the progression of competitors through the Winners and Losers brackets. 
     Brackets contain 
     a dynamic list of Rounds. }
     \item{\textit{Round}: Rounds contain a dynamic list of Matches.}
-    \item{\textit{Match}: Matches pair the strongest and weakest (according to rank) players in a Round.}
+    \item{\textit{Match}: Matches pair the strongest and corresponding weakest players in a Round according to rank. (That is, in a tournament containing $n$ players, the top (1\textsuperscript{st}) ranked player will be matched with the lowest ($n-1$) ranked player, the 2\textsuperscript{nd} ranked player will be matched with the $n-2$ ranked player, etc.)}
 \end{itemize}  
 % To develop the interface between each of the components mentioned above, we decided to implement the following \textit{connectors}:
 % \begin{itemize}
@@ -119,11 +120,11 @@ Conceptually, \texttt{Brackit} needed to support the creation and maintenance of
 \subsubsection{Object-Oriented Architectural Style}
 \label{sssec:ooas}
 As described above, a Double Elimination Tournament mobile management application must maintain a set of well-defined entities (i.e. a Tournaments, Brackets, Rounds, and Matches) with predetermined relationships. For example, given $n$ competitors, a correct double elimination tournament will contain $\ceil{\lg n}$ rounds in the Winners bracket and $\ceil{\lg n} + 
-\ceil{\lg \lg n}$ rounds in the Losers bracket. In addition, the progression of competitors can be calculated at the creation of a tournament, and handling this progression follows a deterministic approach (e.g. The winner of Match 1 of Round 1 in the Winners Bracket will always progress to Match 1 Round 2 in the Winners Bracket - see Figure \ref{fig:deb} for an illustrative example).\\
-Therefore, to encourage an efficient decomposition of the algorithm and entities associated with Double Elimination Tournament creation, we decided to model the architecture of \texttt{Brackit} using an \textbf{Object-Oriented} (OO) architecture. 
-Specifically, we chose to model each of the components of our application as objects. This allowed us to encapsulate the expected behaviour of each of the tournament objects while maintain a valid separation of concerns. To further explicate the validity of the choice of an OO architecture for \texttt{Brackit} consider the dynamic nature of Tournament creation.\\
+\ceil{\lg \lg n}$ rounds in the Losers bracket \cite{de_formula}. In addition, the progression of competitors can be calculated at the creation of a tournament, and handling this progression follows a deterministic approach (e.g. The winner of Match 1 of Round 1 in the Winners Bracket will always progress to Match 1 Round 2 in the Winners Bracket - see Figure \ref{fig:deb} for an illustrative example).\\
+Therefore, to encourage an efficient decomposition of the algorithm and entities associated with Double Elimination Tournament management, we decided to model the architecture of \texttt{Brackit} using an \textbf{Object-Oriented} (OO) architecture. 
+Specifically, we chose to model each of the components of our application as objects. This allowed us to encapsulate the expected behaviour of each of the tournament objects while maintaining a valid separation of concerns. To explicate the validity of the choice of an OO architecture for \texttt{Brackit} consider the dynamic nature of Tournament creation.\\
 A tournament bracket acts as a container for rounds, which themselves act as containers for matches.
-To handle the progression of a competition, the data associated with each match (i.e. which competitor won or lost) should be self contained within the match object instantiation, but also must be accessible through attributes of that object. Therefore defining the Match construct as an object allows the definition of self-contained class methods and attributes that achieve these intended behaviours.
+To handle tournament progression, the data associated with each match (i.e. which competitor won or lost) should be self-contained within the match object instantiation, but also must be accessible through attributes of that object. Defining the Match construct as an object enables self-contained class methods and attributes that achieve these intended behaviours. At the same time, setting the Win / Loss attribute of a match as publicly visible allowed us to develop querying strategies that can provide score summaries for participating users. 
     \begin{figure}[htp]
         \centering
         \includegraphics[width=12cm]{../diagrams/double_elim_bracket_comp.pdf}
@@ -134,6 +135,7 @@ To handle the progression of a competition, the data associated with each match 
 \lipsum[2-4]
 \clearpage
 \subsection{Architectural Diagrams}
+\subsubsection{UML 2 Architectural Component Diagram}
 \vfill
 \begin{center}
     \begin{figure}[htp]
@@ -144,67 +146,21 @@ To handle the progression of a competition, the data associated with each match 
 \end{center}
 \vfill
 
+\clearpage
+\subsubsection{ER Diagram}
+\vfill
 \begin{center}
     \begin{figure}[h]
         \centering
         \includegraphics[width=12.5cm]{../diagrams/er_compressed.pdf}
-        \caption{\texttt{Brackit - } Entity Relationship (ER) Diagram}
+        \caption{\texttt{Brackit - } Entity-Relationship (ER) Diagram}
         \end{figure}
 \end{center}
+\vfill
 \clearpage
 \section{Design}
-\subsection{Description and Rationalization}
-The \texttt{Brackit} backend was designed primarily to marry extensibility with the correctness of 
-our relatively complex domain. The main challenge of the backend's design is the creation of 
-correct brackets, as well as the maintenance of brackets as they progress to completion.
 
-When we create a Tournament, we create a \href{https://github.com/alextrosta/brackit/blob/master/backend/tournament.py#L18}{tournament object} in the backend, which itself creates
-the \href{https://github.com/alextrosta/brackit/blob/master/backend/tournament.py#L59}{bracket objects}. Depending on the bracket type, the appropriate number of rounds are created, 
-with each round containing the corresponding number of matches. This is handled automatically because
-the number of rounds is deterministic with respect to the number of entrants and the type of bracket (See Section \ref{sssec:ooas}).\\
-So far, \texttt{Brackit} only supports double elimination brackets, but this can be expanded easily by the addition of special cases in the Bracket constructor. An alternative approach would be to create an abstract Bracket
-class with each bracket type as an implementation of the abstract Bracket class. This may allow for 
-code that is easier to read and iterate, and would be worth the refactoring time if this project were 
-to be expanded on. 
-
-Another feature we plan on implementing is an easy way for users to enter tournaments via their pre-registered \texttt{Brackit} accounts,
-such as a QR code for a given tournament, which when read, automatically enters the user into the tournament lobby. Our current 
-system design supports this feature very well, as we would simply need to add frontend functionality to create a QR code from the 
-\texttt{/api/lobby/<int:lobby\_id>/add-user/} endpoint, as well as frontend functionality to read the QR code and execute the API endpoint.
-A specific implementation challenge is handling how each match knows who is the entrant which is playing 
-in said match. This is called progression - for matches in the initial rounds, this is trivial as 
-the entrants are simply placed into the matches when the Tournament is instantiated, but as the tournament
-progresses, the client must send data to the backend via a POST request in order to progress the tournament.
-When the results of a match are reported, the system must somehow know where the winner and the loser progresses to.
-One potential solution we explored was to use pointers for each entrant in subsequent matches, where each pointer 
-points to the winner attribute of the previous match which progresses to the subsequent match. However, this 
-solution ran into problems with the SQLAlchemy model, as it became challenging to ensure that as the tournament 
-progressed and the pointers became instantiated with non-null data, that the database reflected these changes. 
-Ultimately, we decided to have two references to two other match objects, loserPlaysInMatch and winnerPlaysInMatch, 
-which reference the match that the loser and winner progress to respectively. This approach simplified database 
-representation, as well as made navigating the bracket easier on the frontend, since one could find subsequent matches
-from a previous match just by inspecting that match object's attributes.
-
-Our backend uses the \href{https://flask.palletsprojects.com/en/1.1.x/}{\texttt{Flask}} python package to expose our bracket and user information to 
-the frontend, as well as \href{https://www.sqlalchemy.org/}{SQLAlchemy} to manage this information in the database. SQLAlchemy provides a \href{https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/}{\texttt{Model}} baseclass that allows us to declare the tournament objects as database tables and a runtime interface by which we interact with our \href{https://www.sqlite.org/index.html}{\texttt{SQLite3}} database. We model each class in our class diagram in \href{https://github.com/alextrosta/brackit/blob/master/backend/app/models.py}{\texttt{models}} module, which creates 
-tables for each class and defines the table relationships in an object oriented style. This 
-allows us to easily and safely query the database itself when invoking APIs, and enables 
-retrieval of the specific object being requested. Additionally, these models allow for 
-seamless SQL querying for user data, such as users cross-tournament wins and losses. 
-
-As a consequence of utilizing SQLAlchemy models to model our classes into the database, we ended up with three 
-significant layers; the \texttt{Routes} layer, which is our API facade - the \texttt{Model} layer, and the \texttt{Backend}
-layer, where much of the logic about how brackets are generated and progression is handled is stored. This created some significant
-challenges when designing for decoupling, as in the \texttt{Routes} layer, when we query the table for the requested objects,
-we return not the \texttt{Backend} objects, but the \texttt{Model} objects. In fact, accessing the \texttt{Backend} object
-after instantiation in the \texttt{Routes} layer became a significant challenge, one that we overcame by moving the logic for inputting
-match results straight into the \texttt{Model} layer, as that is the layer which is responsible for the representation of the objects 
-in the database. We experimented with each class in the \texttt{Model} layer containing its corresponding \texttt{Backend} object 
-as an attribute, however because the Tournament object in the \texttt{Backend} instantiates its child objects such as the Bracket, 
-Rounds, and Matches during its own instantiation, it became impossible to map one to the other fully. This problem would be another 
-area of future evolution for our system.
-
-\subsection{Design Patterns}
+\subsection{Description and Justification of Design Patterns}
 \begin{enumerate}
     \item \textit{Facade}
     
@@ -212,24 +168,91 @@ area of future evolution for our system.
     For our backend, the API endpoints contained in the \href{https://github.com/alextrosta/brackit/blob/master/backend/app/routes.py}{\texttt{routes}} module constitute our Facade. Each endpoint provides a URL which the user can access
     to invoke all necessary interfaces to execute the necessary code in the backend.
 
-    This pattern provides a singular hub through which frontend clients can access backend data,
-    In addition, modelling our server as a Facade centralized all exposed endpoints and allowed for ease of use and extensibility.
+    This pattern provides a singular hub through which frontend clients can access backend data.
+    Modelling our server as a Facade centralized all exposed endpoints and allowed for ease of use and extensibility.
 
     \item \textit{Singleton} 
     
-    The Singleton pattern intends to ensure a class has only one instance, and to allow global 
-    access to that class. The \texttt{Flask} app object leverages the Singleton pattern in its design, as 
-    it is instantiated only once when the server is started, and is accessed globally throughout the 
-    backend. 
-    The justification for the use of the Singleton pattern for the app object is because the app 
-    class itself, when instantiated, is the representation of the Flask server instance at compile time,
-    and is how we modify and customize our server, i.e. specifying the database schema, or specifying the API 
-    endpoints. Additionally, ensuring the app is only instantiated once maintains consistency throughout the session,
-    as multiple apps could potentially create multiple duplicate endpoints, which would create unintentional behaviour
-    such as the duplication of method invocation.
+    The Singleton pattern intends to ensure a class has only one instance and to allow global 
+    access to that class. The \texttt{Flask} app object leverages the Singleton pattern in its design. It is instantiated only once when the server is started, and is accessed globally throughout the 
+    backend. \\
+    A Singleton design pattern for the app object is an appropriate choice because when the app class is instantiated, it acts as a representation of the \texttt{Flask} server at compile-time.
+    % The justification for the use of the Singleton pattern for the app object is because the app 
+    % class itself, when instantiated, is the representation of the Flask server instance at compile-time,
+    This representation encapsulates all current server modifications and customizations 
+    by specifying the database schema, API endpoints, as well as any backend refactoring. 
+    Correspondingly, this guarantees that the app is only instantiated once. This maintains consistency throughout a session, and mitigates the possibility that multiple clients create  duplicate endpoints, which would result in unintentional behaviour such as the inconsistent method invocations.
 \end{enumerate}
+
+\subsection{Implementation Analysis}
+
+
+    The \texttt{Brackit} backend was designed primarily to marry extensibility with the correctness of 
+our relatively complex domain. The main challenge of the backend's design is the creation of 
+correct brackets, as well as the maintenance of brackets as they progress to completion.
+When a user creates a Tournament, \texttt{Brackit} initializes a \href{https://github.com/alextrosta/brackit/blob/master/backend/tournament.py#L18}{\texttt{tournament} object} in the backend, which itself creates
+the \href{https://github.com/alextrosta/brackit/blob/master/backend/tournament.py#L59}{\texttt{bracket} objects}. Depending on the bracket type, the appropriate number of rounds are created, 
+with each round containing the corresponding number of matches. This is handled automatically because
+the number of rounds is deterministic with respect to the number of entrants and the type of bracket (See Section \ref{sssec:ooas}).\\
+Our backend uses the \href{https://flask.palletsprojects.com/en/1.1.x/}{\texttt{Flask}} python package to expose our bracket and user information to 
+the frontend, as well as \href{https://www.sqlalchemy.org/}{SQLAlchemy} to manage this information in the database. SQLAlchemy provides a \href{https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/}{\texttt{Model}} baseclass that allows us to declare the tournament objects as database tables and a runtime interface by which we interact with our \href{https://www.sqlite.org/index.html}{\texttt{SQLite3}} database. We model each class in our class diagram in the \href{https://github.com/alextrosta/brackit/blob/master/backend/app/models.py}{\texttt{models}} module, which creates 
+tables for each class and defines the table relationships in an object-oriented style. This 
+allows us to easily and safely query the database when invoking APIs and enables 
+retrieval of the specific object being requested. Additionally, these models allow for 
+seamless SQL querying for user data, such as users' cross-tournament wins and losses. 
+
+\subsection{Integration and Coupling Challenges}
+As a consequence of utilizing SQLAlchemy model our classes in the database, we produced three 
+layers of abstraction in our application: 
+\begin{itemize}
+    \item{the \texttt{Routes} layer, i.e. our API Facade, }
+    \item{the \texttt{Model} layer, and}
+    \item{the \texttt{Backend}
+    layer, where bracket generation and progression handling logic is stored.}
+\end{itemize}  This created some significant
+challenges when designing for decoupling. When we query the tables for requested objects in the \texttt{Routes} layer, 
+we return the \texttt{Model} objects and not the \texttt{Backend} objects. Accessing \texttt{Backend} objects
+after instantiation in the \texttt{Routes} layer became a significant challenge. We addressed this by moving the logic for inputting
+match results directly into the \texttt{Model} layer, as that is the layer responsible for the representation of the objects 
+in the database. \\
+Also, we experimented with each class in the \texttt{Model} layer containing its corresponding \texttt{Backend} object 
+as an attribute. However, because the Tournament object in the \texttt{Backend} instantiates its child objects such as the Bracket, 
+Rounds, and Matches during initialization, it became impossible to map one to the other fully. This problem would be another 
+area of future evolution for our system.
+\\A specific implementation challenge is handling how each match knows who is the entrant which is playing 
+in said match. This is called progression - for matches in the initial rounds, this is trivial as 
+the entrants are simply placed into the matches when the Tournament is instantiated, but as the tournament
+progresses, the client must send data to the backend via a POST request to progress the tournament.
+When the results of a match are reported, the system must somehow know where the winner and the loser progress to.
+One potential solution we explored was to use pointers for each entrant in subsequent matches, where each pointer 
+points to the winner attribute of the previous match which progresses to the subsequent match. However, this 
+solution ran into problems with the SQLAlchemy model, as it became challenging to ensure that as the tournament 
+progressed and the pointers became instantiated with non-null data, that the database reflected these changes. 
+Ultimately, we decided to have two references to two other match objects, loserPlaysInMatch and winnerPlaysInMatch, 
+which reference the match that the loser and winner progress to respectively. This approach simplified database 
+representation, as well as made navigating the bracket easier on the frontend since one could find subsequent matches
+from a previous match just by inspecting that match object's attributes.
+
+
+\subsection{Suggestions for Future Work}
+
+So far, \texttt{Brackit} only supports double elimination brackets, but this can be expanded easily by the addition of special cases in the Bracket constructor. An alternative approach would be to create an abstract Bracket
+class with each bracket type as an extension of the abstract Bracket class. This may allow for 
+code that is readable and iterable and would be worth the refactoring time if this project were 
+to be expanded. \\
+We also plan to streamline user entry to tournaments via their pre-registered \texttt{Brackit} accounts using a QR code for a given tournament that, when read, automatically enters the user into the tournament lobby. Our choices of  
+the Facade Design pattern coupled with our Object-Oriented and Server-Client Architecture will facilitate the integration of this new feature. Specifically, by modelling a Tournament as an object, we can add an additional \href{https://docs.python.org/3/library/uuid.html}{\texttt{uuid}}
+attribute that enables unique QR code generation and matching. Once this feature is supported, further frontend functionality will be needed to display a QR code from the 
+\texttt{/api/lobby/<int:lobby\_id>/add-user/} endpoint, as well QR Code recognition from an additional API endpoint.
+
+
+
+
+
+
 \clearpage
-\section{Design Diagrams}
+\subsection{Design Diagrams}
+\subsubsection{UML Class Diagram}
 \begin{center}
     \begin{figure}[htp]
         \centering
@@ -237,7 +260,9 @@ area of future evolution for our system.
         \caption{\texttt{Brackit - }UML Class Diagram}
         \end{figure}
 \end{center}
-
+\clearpage
+\subsubsection{\texttt{Create Tournament} Sequence Diagram}
+\vfill
 \begin{center}
     \begin{figure}[htp]
         \centering
@@ -245,7 +270,7 @@ area of future evolution for our system.
         \caption{\texttt{Brackit: Create Tournament} Sequence Diagram}
         \end{figure}
 \end{center}
-
+\vfill
 
 
 
