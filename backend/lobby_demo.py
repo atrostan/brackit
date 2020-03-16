@@ -118,7 +118,6 @@ r = requests.get(url, auth=(tkn, 'unused'))
 
 
 # miguel creates lobby
-
 url = 'http://127.0.0.1:5000/api/create/lobby/'
 headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
 payload = json.dumps({
@@ -139,14 +138,12 @@ q = \
 
 # posted a user
 df = pd.read_sql_query(q, cnx)
-df
 
 users = df.username.values
 np.random.shuffle(users)
 import random
 
 # miguel adds users to his lobby
-
 url = 'http://127.0.0.1:5000/api/lobby/1/add-user/'
 headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
 
