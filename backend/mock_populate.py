@@ -146,7 +146,7 @@ tkn = json.loads(r.content)['token']
 url = f'{URL_PREFIX}api/create/lobby/'
 headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
 payload = json.dumps({
-    "tournament_name" : "miguel's tourneys"
+    "tournament_name" : "miguel's tourney"
 })
 r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
 
@@ -235,7 +235,7 @@ r = requests.get(url, auth=('TPN', 'tpn'))
 c_tkn = json.loads(r.content)['token']
 
 # TPN can't enter scores
-handle_progression(tournament, c_tkn)
+# handle_progression(tournament, c_tkn)
 
 # get miguel's token / log miguel in
 url = f'{URL_PREFIX}api/token'
@@ -245,5 +245,80 @@ tkn = json.loads(r.content)['token']
 # TO (miguel) can enter scores
 handle_progression(tournament, tkn)
 
-# print all the tables for good measure
+# miguel makes another tourn
 
+# get miguel's token
+url = f'{URL_PREFIX}api/token'
+r = requests.get(url, auth=('miguel', 'python'))
+tkn = json.loads(r.content)['token']
+
+# miguel creates lobby
+url = f'{URL_PREFIX}api/create/lobby/'
+headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+payload = json.dumps({
+    "tournament_name" : "miguel's second online tourney"
+})
+r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
+
+lobby_2 = \
+    LobbyModel \
+        .query \
+        .filter_by(tournament_name="miguel's second online tourney") \
+        .first()
+# miguel adds users to his lobby
+
+q = 'select * from user'
+
+# posted a user
+df = pd.read_sql_query(q, cnx)
+
+
+users = df.loc[df['role'] != 'Guest'].username.values
+np.random.shuffle(users)
+
+url = f'{URL_PREFIX}api/lobby/{lobby_2.id}/add-user/'
+headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+
+seeds = random.sample(range(1, len(users)+1), len(users)) 
+roles = ["User" for u in users]
+for u, s, r in zip(users, roles, seeds):
+    print(f'adding {u}, {s}, {r}')
+    payload = json.dumps({
+        "username" : u,
+        "role" : s,
+        "seed" : r
+    })
+    r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
+    print(json.loads(r.content))
+
+# miguel adds a guest user
+
+url = f'{URL_PREFIX}api/lobby/{lobby_2.id}/add-user/'
+headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+
+payload = json.dumps({
+    "username" : "guestc",
+    "role" : "Guest",
+    "seed" : 10
+})
+r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
+print(json.loads(r.content))
+
+# create a tournament from lobby 
+url = f'{URL_PREFIX}api/lobby/{lobby_2.id}/create-tournament/'
+headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+payload = json.dumps({})
+r = requests.post(url, payload, headers=headers, auth=(tkn, 'unused'))
+
+print(json.loads(r.content))
+
+# show all created tournaments
+df = pd.read_sql_query('select * from tournament', cnx)
+print(df)
+
+# access endpoint to show all tournaments
+url = f'{URL_PREFIX}api/user/1/tournaments/'
+headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+# payload = json.dumps({})
+r = requests.get(url, headers=headers,)
+print(json.loads(r.content))
