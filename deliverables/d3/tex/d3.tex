@@ -145,7 +145,7 @@ Finally, using a client-server model will allow planned revisions and upgrades t
 \begin{center}
     \begin{figure}[htp]
         \centering
-        \includegraphics[width=14.5cm]{../diagrams/component_diag.pdf}
+        \includegraphics[width=18.5cm]{../diagrams/component_diag.pdf}
         \caption{\texttt{Brackit - }\href{https://sparxsystems.com/resources/tutorials/uml2/index.html}{UML 2} Architectural Component Diagram}
         \end{figure}
 \end{center}
@@ -157,7 +157,7 @@ Finally, using a client-server model will allow planned revisions and upgrades t
 \begin{center}
     \begin{figure}[h]
         \centering
-        \includegraphics[width=12.5cm]{../diagrams/er_compressed.pdf}
+        \includegraphics[width=18.5cm]{../diagrams/er_compressed.pdf}
         \caption{\texttt{Brackit - } Entity-Relationship (ER) Diagram}
         \end{figure}
 \end{center}
@@ -187,6 +187,16 @@ Finally, using a client-server model will allow planned revisions and upgrades t
     and specifies the database schema, API endpoints, as well as any backend refactoring. 
     Correspondingly, this guarantees that the app is only instantiated once. This maintains consistency throughout a session and mitigates the possibility that multiple clients create  duplicate endpoints, which would result in unintentional behaviour such as inconsistent method invocations.
 \end{enumerate}
+
+\subsection{Frontend Frameworks Rationalization}
+% The first decision we made at the planning stage was to decide the platform for our app.
+To develop our mobile application, both Android and iOS platforms could have met our needs.
+iOS was a strong candidate since it has a large market audience and it would have allowed us to build the app in a fast and easy way. The disadvantage is that we are more restricted with writing Swift code and building up components for specific devices.
+Developing using Android allows for more flexible feature implementation using an open source platform that could be adapted to cater to the specific needs of \texttt{Brackit}.
+The downside is that developing Android apps could be more complex since there is no standardization for devices and components. \\
+We decided to proceed with Android since more team members are comfortable with the Android environment. This gave us the flexibility to run an Android environment on both Mac iOS and Windows operating systems.
+For Frontend development, we used Kotlin to integrate with Android Studio. Although Java seems to be a popular choice for Android app developers, Kotlin, as a relatively new open source language, has been gaining popularity for several reasons.
+Kotlin is based on the JVM (Java Virtual Machine) and it is fully interoperable with Java. It can be seamlessly integrated with Android Studio. And, Kotlin is more lightweight than Java and can therefore significantly reduce the overhead associated with the project.
 
 \subsection{Implementation Analysis}
 
@@ -259,25 +269,33 @@ attribute that enables unique QR code generation and matching. Once this feature
 
 \clearpage
 \subsection{Design Diagrams}
-\subsubsection{UML Class Diagram}
+\subsubsection{Backend UML Class Diagram}
 \begin{center}
     \begin{figure}[htp]
         \centering
         \includegraphics[width=13cm]{../diagrams/uml_class_tourn.pdf}
-        \caption{\texttt{Brackit - }UML Class Diagram}
+        \caption{\texttt{Brackit - } Backend UML Class Diagram}
         \end{figure}
 \end{center}
 \clearpage
-\subsubsection{\texttt{Create Tournament} Sequence Diagram}
-\vfill
+\subsubsection{Frontend UML Class Diagram}
 \begin{center}
     \begin{figure}[htp]
         \centering
-        \includegraphics[width=16cm]{../diagrams/sequence.pdf}
+        \includegraphics[width=9cm]{../diagrams/brackit-frontend-classDiagram.pdf}
+        \caption{\texttt{Brackit - } Frontend UML Class Diagram}
+        \end{figure}
+\end{center}
+\subsubsection{\texttt{Create Tournament} Sequence Diagram}
+% \vfill
+\begin{center}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=10cm]{../diagrams/sequence.pdf}
         \caption{\texttt{Brackit: Create Tournament} Sequence Diagram}
         \end{figure}
 \end{center}
-\vfill
+% \vfill
 
 \clearpage
 \section{Assignment of Tasks}
@@ -286,7 +304,7 @@ attribute that enables unique QR code generation and matching. Once this feature
         \begin{itemize}
             \item{Report: 
                 \begin{itemize}
-                    \item{Sections 2.1-2.4}
+                    \item{Sections 2.1, 2.3 - 2.5}
                 \end{itemize}
             }
             \item{\texttt{Brackit}: 
@@ -299,32 +317,37 @@ attribute that enables unique QR code generation and matching. Once this feature
             }
         \end{itemize}
     }
-    \item{Suohong Liu, 101002340: 
-        \begin{itemize}
-            \item{Report: 
-                \begin{itemize}
-                    \item{}
-                \end{itemize}
-            }
-            \item{\texttt{Brackit}: 
-                \begin{itemize}
-                    \item{}
-                \end{itemize}
-            }
-        \end{itemize}
+    \item{Suohong Liu, 101002340:
+    \begin{itemize}
+        \item{Report:
+            \begin{itemize}
+                \item{}
+            \end{itemize}
+        }
+        \item{\texttt{Brackit}:
+            \begin{itemize}
+                \item{Asynchronous information processing with the server}
+                \item{Progression handling - frontend implementation}
+                \item{Endpoint testing}
+            \end{itemize}
+        }
+    \end{itemize}
     }
-    \item{Xiyi Liu, 101004577: 
+    \item{Xiyi Liu, 101004577:
         \begin{itemize}
-            \item{Report: 
+            \item{Report:
                 \begin{itemize}
-                    \item{}
+                    \item{Section 2.2}
+                    \item{Figure 5}
                 \end{itemize}
             }
-            \item{\texttt{Brackit}: 
+            \item{\texttt{Brackit}:
                 \begin{itemize}
-                    \item{}
+                    \item{User interface design for frontend}
+                    \item{Endpoints testing}
+                    \item{Implementation of user activities}
                 \end{itemize}
-            }            
+            }
         \end{itemize}
     }
     \item{Alex Trostanovsky, 100984702: 
@@ -332,7 +355,7 @@ attribute that enables unique QR code generation and matching. Once this feature
             \item{Report: 
                 \begin{itemize}
                     \item{\LaTeX Compilation}
-                    \item{Figures 1-5}
+                    \item{Figures 1-4, 6}
                     \item{Sections 1.1-1.2}
                 \end{itemize}
             }
