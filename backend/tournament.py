@@ -41,7 +41,7 @@ class Tournament:
 
         # tournament organizer id
         o_id = UserModel.query.filter_by(username=TO).first_or_404().id
-        print(o_id)
+        # print(o_id)
         t_model = TournamentModel(
             n_entrants = len(self.bracket.entrants),
             name = tournament_name,
@@ -162,7 +162,7 @@ class Round:
         elif (self.number == self.bracket.numWinnersRounds - 1 and 
                 self.isWinners == True):
             # TODO insert logic for grand finals reset
-            print(self.number)
+            # print(self.number)
             
             r_idx = self.bracket.numWinnersRounds - 1
             
