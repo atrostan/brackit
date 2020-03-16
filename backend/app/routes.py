@@ -371,6 +371,9 @@ def report_match(id):
     match_schema = MatchSchema()
     return match_schema.dump(match)
 
+@app.route('/api/user/<int:id>/tournaments')
+def user_tournaments
+
 @app.route('/api/user/<int:id>/winsandlosses')
 def winsandlosses(id):
     user = UserModel.query.filter_by(id=id).first_or_404()
