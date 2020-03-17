@@ -11,6 +11,18 @@ from app.models import User as UserModel
 
 import uuid
 
+def seed(n):
+    """ returns list of n in standard tournament seed order
+
+    Note that n need not be a power of 2 - 'byes' are returned as zero
+    """
+    ol = [1]
+    for i in range( math.ceil( math.log(n) / math.log(2) ) ):
+        l = 2*len(ol) + 1
+        ol = [e if e <= n else 0 for s in [[el, l-el] for el in ol] for e in s]
+    return list(zip(ol[::2],ol[1:][::2]))
+
+
 class BracketTypes(Enum):
     DOUBLE_ELIMINATION = 1
 
@@ -28,7 +40,6 @@ class Tournament:
         if len(entrants) > 0:
             if type(entrants[0]) == tuple:
                 entrants = [t[0] for t in sorted(entrants, key=lambda x: x[1])]
-
         self.bracket = Bracket(entrants, bracketType)
 
     def post_to_db(self, tournament_name, TO):
@@ -121,29 +132,16 @@ class Round:
         self.matches = []
         self.isWinners = isWinners
         self.numMatches = numMatches
-        # TODO fix order of first round matches
-        # entrants = []
-        # for i in range(0, self.bracket.ceilPlayers):
-        #     try:
-        #         entrants.append(self.bracket.entrants[i])
-        #     except:
-        #         entrants.append(None)
-        # for i in range(0, (len(entrants)/2) - 1):
-        #     for j in range(len(entrants)/2)
-        for i in range(0, self.numMatches):
-            if number == 1 and isWinners == True:
-                if (len(self.bracket.entrants) < self.bracket.ceilPlayers - i):
+        if number == 1 and isWinners == True:
+            for (i,j) in seed(self.bracket.ceilPlayers):
+                if (len(self.bracket.entrants) < j):
                     self.matches.append(
-                        Match(self.bracket.entrants[i], None, self))
+                        Match(self.bracket.entrants[i-1], None, self))
                 else:
                     self.matches.append(
-                        Match(
-                            self.bracket.entrants[i], 
-                            self.bracket.entrants[self.bracket.ceilPlayers - i - 1], 
-                            self
-                        )
-                    )
-            else:
+                        Match(self.bracket.entrants[i-1], self.bracket.entrants[j-1], self))
+        else:
+            for i in range(0, self.numMatches):
                 self.matches.append(Match(None, None, self))
 
     def post_to_db(self, bracket_model):
