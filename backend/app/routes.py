@@ -305,9 +305,11 @@ def create_tournament_from_lobby(lobby_id):
         LobbySeed.query.filter_by(lobby_id=lobby_id).delete()
         db.session.commit()
 
-        key = 'Success'
-        val = f'Created tournament {t_id}'
-        content = {key : val}
+        content = {
+            'Success' : 'Tournament created',
+            'tournament_id' : t_id,
+            'tournament_name' : tournament_name
+        }
 
         return content, status.HTTP_200_OK
 
