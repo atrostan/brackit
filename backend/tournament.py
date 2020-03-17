@@ -105,10 +105,10 @@ class Bracket:
                     self.ceilPlayers/(2**(2*(math.ceil(i/2))))), isWinners=False))
             elif i % 2 == 0:
                 self.rounds.append(Round(
-                    i, self, self.rounds[self.numLosersRounds + i-1].numMatches, isWinners=False))
+                    i, self, self.rounds[self.numWinnersRounds + i-2].numMatches, isWinners=False))
             else:
                 self.rounds.append(Round(i, self, int(
-                    self.rounds[self.numLosersRounds + i-1].numMatches/2), isWinners=False))
+                    self.rounds[self.numWinnersRounds + i-2].numMatches/2), isWinners=False))
 
         for i in range(0, len(self.rounds)):
             self.rounds[i].handleProgression()
@@ -121,6 +121,15 @@ class Round:
         self.matches = []
         self.isWinners = isWinners
         self.numMatches = numMatches
+        # TODO fix order of first round matches
+        # entrants = []
+        # for i in range(0, self.bracket.ceilPlayers):
+        #     try:
+        #         entrants.append(self.bracket.entrants[i])
+        #     except:
+        #         entrants.append(None)
+        # for i in range(0, (len(entrants)/2) - 1):
+        #     for j in range(len(entrants)/2)
         for i in range(0, self.numMatches):
             if number == 1 and isWinners == True:
                 if (len(self.bracket.entrants) < self.bracket.ceilPlayers - i):
