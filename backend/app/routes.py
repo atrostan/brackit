@@ -370,14 +370,30 @@ def report_match(id):
     if match.winner_to is not None:
         match.winner_to.input_user_to_match(winner_id)
         db.session.add(match.winner_to)
-    if (match.loser_to is not None):
+    if match.loser_to is not None:
         match.loser_to.input_user_to_match(loser_id)
-        if (match.loser_to.user_2 is None and adjacentmatch is not None and adjacentmatch.winner is not None):
-            match.loser_to.winner = loser_id
-            match.loser_to.user_1_score = 0
-            match.loser_to.user_2_score = -1
-            match.loser_to.winner_to.input_user_to_match(loser_id)
-            db.session.add(match.loser_to.winner_to)
+
+        # Handle byes in losers bracket
+        prev_match_winners = MatchModel.query.filter_by(loser_advance_to=match.loser_to.id).all()
+        if match in prev_match_winners:
+            prev_match_winners.remove(match)
+        prev_match_losers = MatchModel.query.filter_by(winner_advance_to=match.loser_to.id).all()
+        if match in prev_match_losers:
+            prev_match_losers.remove(match)
+        for prev_match in prev_match_winners:
+            if (match.loser_to.user_2 is None and prev_match.user_1_score is not None):
+                match.loser_to.winner = loser_id
+                match.loser_to.user_1_score = 0
+                match.loser_to.user_2_score = -1
+                match.loser_to.winner_to.input_user_to_match(loser_id)
+                db.session.add(match.loser_to.winner_to)
+        for prev_match in prev_match_losers:
+            if (match.loser_to.user_2 is None and prev_match.user_1_score is not None):
+                match.loser_to.winner = loser_id
+                match.loser_to.user_1_score = 0
+                match.loser_to.user_2_score = -1
+                match.loser_to.winner_to.input_user_to_match(loser_id)
+                db.session.add(match.loser_to.winner_to)
         db.session.add(match.loser_to)
     
     db.session.add(match)
@@ -386,8 +402,8 @@ def report_match(id):
     match_schema = MatchSchema()
     return match_schema.dump(match)
 
-@app.route('/api/user/<int:id>/tournaments')
-def user_tournaments
+# @app.route('/api/user/<int:id>/tournaments')
+# def user_tournaments
 
 @app.route('/api/user/<int:id>/winsandlosses')
 def winsandlosses(id):
