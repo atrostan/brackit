@@ -44,6 +44,7 @@ def handle_progression(tournament, tkn):
     for bracket in tournament.brackets:
         for round in bracket.rounds:
             for match in round.matches:
+                print(match.id)
                 if match.id == 8:
                     urlgf = \
                         f'{URL_PREFIX}api/match/{match.id}/report-match'
@@ -234,7 +235,7 @@ r = requests.get(url, auth=('TPN', 'tpn'))
 c_tkn = json.loads(r.content)['token']
 
 # TPN can't enter scores
-# handle_progression(tournament, c_tkn)
+handle_progression(tournament, c_tkn)
 
 # get miguel's token / log miguel in
 url = f'{URL_PREFIX}api/token'
