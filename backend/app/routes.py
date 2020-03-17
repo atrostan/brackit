@@ -149,7 +149,9 @@ def create_lobby():
             db.session.add(lobby) 
             db.session.commit()
             content = {
-            'Lobby Created': f'Lobby created for tournament: {tournament_name}'
+                'Success' : 'Lobby created',
+                'lobby_id' : lobby.id,
+                'tournament_name' : tournament_name
             }
             return content, status.HTTP_201_CREATED
 

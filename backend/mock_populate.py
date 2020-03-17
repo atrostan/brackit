@@ -150,6 +150,7 @@ payload = json.dumps({
 })
 r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
 
+print(json.loads(r.content))
 # miguel adds users to his lobby
 
 q = 'select * from user'
