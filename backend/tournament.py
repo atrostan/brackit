@@ -60,7 +60,7 @@ class Bracket:
     def __init__(self, entrants, bracketType):
         self.entrants = entrants
         self.bracketType = bracketType
-        self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
+        self.ceilPlayers = int(2**(math.ceil(math.log2(len(self.entrants)))))
         if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
 
