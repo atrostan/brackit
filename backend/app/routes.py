@@ -342,7 +342,12 @@ def create_tournament_1():
 @auth.login_required
 def report_match(id):
     match = MatchModel.query.filter_by(id=id).first_or_404()
-
+    matchRound = RoundModel.query.filter_by(id=match.round_id).first_or_404()
+    if matchRound.number is 1:
+        adjacentId = id+1 if (match.id % 2 is not 0) else id-1
+        adjacentmatch = MatchModel.query.filter_by(id=adjacentId).first()
+    else: 
+        adjacentmatch = None
     # ensure that TO is inputting scores and winners
     if g.user.id != match.get_TO():
         content = {
@@ -350,8 +355,12 @@ def report_match(id):
         }
         return content, status.HTTP_403_FORBIDDEN
 
-    if match.user_1 is None or match.user_2 is None:
-        content = {'This match has not been reached': 'it cannot be reported'}
+    if (match.winner is not None):
+        content = {f'Match {str(id)} has already been completed': 'it cannot be reported'}
+        return content, status.HTTP_406_NOT_ACCEPTABLE
+
+    if (match.user_1 is None or match.user_2 is None):
+        content = {f'Match {str(id)} has not been reached': 'it cannot be reported'}
         return content, status.HTTP_406_NOT_ACCEPTABLE
     entrant1_score = request.json.get('entrant1_score')
     entrant2_score = request.json.get('entrant2_score')
@@ -363,8 +372,30 @@ def report_match(id):
     if match.winner_to is not None:
         match.winner_to.input_user_to_match(winner_id)
         db.session.add(match.winner_to)
-    if (match.loser_to is not None):
+    if match.loser_to is not None:
         match.loser_to.input_user_to_match(loser_id)
+
+        # Handle byes in losers bracket
+        prev_match_winners = MatchModel.query.filter_by(loser_advance_to=match.loser_to.id).all()
+        if match in prev_match_winners:
+            prev_match_winners.remove(match)
+        prev_match_losers = MatchModel.query.filter_by(winner_advance_to=match.loser_to.id).all()
+        if match in prev_match_losers:
+            prev_match_losers.remove(match)
+        for prev_match in prev_match_winners:
+            if (match.loser_to.user_2 is None and prev_match.user_1_score is not None):
+                match.loser_to.winner = loser_id
+                match.loser_to.user_1_score = 0
+                match.loser_to.user_2_score = -1
+                match.loser_to.winner_to.input_user_to_match(loser_id)
+                db.session.add(match.loser_to.winner_to)
+        for prev_match in prev_match_losers:
+            if (match.loser_to.user_2 is None and prev_match.user_1_score is not None):
+                match.loser_to.winner = loser_id
+                match.loser_to.user_1_score = 0
+                match.loser_to.user_2_score = -1
+                match.loser_to.winner_to.input_user_to_match(loser_id)
+                db.session.add(match.loser_to.winner_to)
         db.session.add(match.loser_to)
     
     db.session.add(match)
@@ -396,7 +427,6 @@ def user_tournaments(user_id):
             .all()
     tournaments = [tournament_schema.dump(t) for t in tournaments]
     return json.dumps(tournaments)
-
 
 @app.route('/api/user/<int:id>/winsandlosses')
 def winsandlosses(id):

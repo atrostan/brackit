@@ -11,6 +11,18 @@ from app.models import User as UserModel
 
 import uuid
 
+def seed(n):
+    """ returns list of n in standard tournament seed order
+
+    Note that n need not be a power of 2 - 'byes' are returned as zero
+    """
+    ol = [1]
+    for i in range( math.ceil( math.log(n) / math.log(2) ) ):
+        l = 2*len(ol) + 1
+        ol = [e if e <= n else 0 for s in [[el, l-el] for el in ol] for e in s]
+    return list(zip(ol[::2],ol[1:][::2]))
+
+
 class BracketTypes(Enum):
     DOUBLE_ELIMINATION = 1
 
@@ -28,7 +40,6 @@ class Tournament:
         if len(entrants) > 0:
             if type(entrants[0]) == tuple:
                 entrants = [t[0] for t in sorted(entrants, key=lambda x: x[1])]
-
         self.bracket = Bracket(entrants, bracketType)
 
     def post_to_db(self, tournament_name, TO):
@@ -60,7 +71,7 @@ class Bracket:
     def __init__(self, entrants, bracketType):
         self.entrants = entrants
         self.bracketType = bracketType
-        self.ceilPlayers = int(2**(math.ceil(math.log(len(self.entrants)))))
+        self.ceilPlayers = int(2**(math.ceil(math.log2(len(self.entrants)))))
         if (bracketType == BracketTypes.DOUBLE_ELIMINATION):
             self.makeDoubleElimBracket()
 
@@ -105,10 +116,10 @@ class Bracket:
                     self.ceilPlayers/(2**(2*(math.ceil(i/2))))), isWinners=False))
             elif i % 2 == 0:
                 self.rounds.append(Round(
-                    i, self, self.rounds[self.numLosersRounds + i-1].numMatches, isWinners=False))
+                    i, self, self.rounds[self.numWinnersRounds + i-2].numMatches, isWinners=False))
             else:
                 self.rounds.append(Round(i, self, int(
-                    self.rounds[self.numLosersRounds + i-1].numMatches/2), isWinners=False))
+                    self.rounds[self.numWinnersRounds + i-2].numMatches/2), isWinners=False))
 
         for i in range(0, len(self.rounds)):
             self.rounds[i].handleProgression()
@@ -121,20 +132,16 @@ class Round:
         self.matches = []
         self.isWinners = isWinners
         self.numMatches = numMatches
-        for i in range(0, self.numMatches):
-            if number == 1 and isWinners == True:
-                if (len(self.bracket.entrants) < self.bracket.ceilPlayers - i):
+        if number == 1 and isWinners == True:
+            for (i,j) in seed(self.bracket.ceilPlayers):
+                if (len(self.bracket.entrants) < j):
                     self.matches.append(
-                        Match(self.bracket.entrants[i], None, self))
+                        Match(self.bracket.entrants[i-1], None, self))
                 else:
                     self.matches.append(
-                        Match(
-                            self.bracket.entrants[i], 
-                            self.bracket.entrants[self.bracket.ceilPlayers - i - 1], 
-                            self
-                        )
-                    )
-            else:
+                        Match(self.bracket.entrants[i-1], self.bracket.entrants[j-1], self))
+        else:
+            for i in range(0, self.numMatches):
                 self.matches.append(Match(None, None, self))
 
     def post_to_db(self, bracket_model):
@@ -227,30 +234,44 @@ class Round:
                     self.matches[i].winnerPlaysInMatch(
                         self.bracket.rounds[r_idx].matches[m_idx]
                     )
-
+            ## if first round bye, progress automatically
+            if self.number == 1 and self.matches[i].entrant1 == None:
+                self.matches[i].inputScore(-1, 0, self.matches[i].entrant2, self.matches[i].entrant1)
+            elif self.number == 1 and self.matches[i].entrant2 == None:
+                self.matches[i].inputScore(0, -1, self.matches[i].entrant1, self.matches[i].entrant2)
+                
 
 class Match:
     def __init__(self, entrant1, entrant2, matchRound):
         self.entrant1 = entrant1
         self.entrant2 = entrant2
+        self.scoreEntrant1 = None
+        self.scoreEntrant2 = None
         self.matchRound = matchRound
         self.uuid = str(uuid.uuid4())
+        self.winner_advance_to = None
+        self.loser_advance_to = None
+        self.winner = None
 
     def post_to_db(self, round_model):
-    
+        
         u1_query = UserModel.query.filter_by(username=self.entrant1).first()
         u2_query = UserModel.query.filter_by(username=self.entrant2).first()
+        winner_query = UserModel.query.filter_by(username=self.winner).first()
 
         u1_id = u1_query.id if u1_query is not None else None
         u2_id = u2_query.id if u2_query is not None else None
+        winner_id = winner_query.id if winner_query is not None else None
         r_id = round_model.id
 
         m_model = MatchModel(
             user_1 = u1_id,
             user_2 = u2_id,
-            winner = None,
+            winner = winner_id,
             round_id = r_id,
             uuid = self.uuid,
+            user_1_score = self.scoreEntrant1,
+            user_2_score = self.scoreEntrant2,
             # winner_advance_to = winner_match_id,
             # loser_advance_to = loser_match_id
         )
@@ -261,17 +282,17 @@ class Match:
     def post_self_refs(self,):
         winner_match_id = None
         loser_match_id = None
-        if type(self.winnerPlaysInMatch) == Match:
+        if type(self.winner_advance_to) == Match:
             w_query = MatchModel \
                         .query \
-                        .filter_by(uuid=self.winnerPlaysInMatch.uuid) \
+                        .filter_by(uuid=self.winner_advance_to.uuid) \
                         .first()
 
 
             if w_query is not None: winner_match_id = w_query.id 
 
-        if type(self.loserPlaysInMatch) == Match:
-            uuid = self.loserPlaysInMatch.uuid
+        if type(self.loser_advance_to) == Match:
+            uuid = self.loser_advance_to.uuid
             l_query = MatchModel \
                         .query \
                         .filter_by(uuid=uuid) \
@@ -284,18 +305,20 @@ class Match:
         db.session.commit()
 
     def winnerPlaysInMatch(self, nextMatch):
-        self.winnerPlaysInMatch = nextMatch
+        self.winner_advance_to = nextMatch
 
     def loserPlaysInMatch(self, nextMatch):
-        self.loserPlaysInMatch = nextMatch
+        self.loser_advance_to = nextMatch
 
     def inputScore(self, scoreEntrant1, scoreEntrant2, winner, loser):
-        ##TODO
+        
         self.scoreEntrant1 = scoreEntrant1
         self.scoreEntrant2 = scoreEntrant2
         self.winner = winner
-        self.proceedToMatch(winner, self.winnerPlaysInMatch)
-        self.proceedToMatch(loser, self.loserPlaysInMatch)
+        if self.winner_advance_to is not None:
+            self.proceedToMatch(winner, self.winner_advance_to)
+        if self.loser_advance_to is not None:
+            self.proceedToMatch(loser, self.loser_advance_to)
 
     def proceedToMatch(self, entrant, match):
         if match.entrant1 == None:
