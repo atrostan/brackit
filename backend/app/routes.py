@@ -149,7 +149,9 @@ def create_lobby():
             db.session.add(lobby) 
             db.session.commit()
             content = {
-            'Lobby Created': f'Lobby created for tournament: {tournament_name}'
+                'Success' : 'Lobby created',
+                'lobby_id' : lobby.id,
+                'tournament_name' : tournament_name
             }
             return content, status.HTTP_201_CREATED
 
@@ -402,8 +404,29 @@ def report_match(id):
     match_schema = MatchSchema()
     return match_schema.dump(match)
 
-# @app.route('/api/user/<int:id>/tournaments')
-# def user_tournaments
+@app.route('/api/user/<int:user_id>/tournaments/')
+def user_tournaments(user_id):
+    """return all the tournaments this user has created
+    
+    Arguments:
+        user_id {int} 
+    """
+    try:
+        user = UserModel.query.filter_by(id=user_id).first_or_404()
+    except NotFound as e:
+        key = str(e).split(':')[0]
+        val = f'user {user_id} does not exist'
+        content = {key : val}
+        return content, status.HTTP_404_NOT_FOUND
+
+    tournament_schema = TournamentSchema()
+    tournaments = \
+        TournamentModel \
+            .query \
+            .filter_by(organizer_id=user.id) \
+            .all()
+    tournaments = [tournament_schema.dump(t) for t in tournaments]
+    return json.dumps(tournaments)
 
 @app.route('/api/user/<int:id>/winsandlosses')
 def winsandlosses(id):
