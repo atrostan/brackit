@@ -486,6 +486,77 @@ def winsandlosses(id):
     return jsonify(wins_losses)
 
 
+@app.route('/api/user/<int:user_id>/modify/', methods=['POST'])
+@auth.login_required
+def modify_user(user_id):
+    # verify that modifying user has credentials
+    curr_uid = g.user.id
+
+    try:
+        user = UserModel.query.filter_by(id=user_id).first_or_404()
+        if curr_uid != user.id:
+            key = 'Unauthorized'
+            val = \
+                f'{g.user.username} is not authorized to modify this user'
+            content = {key : val}
+            return content, status.HTTP_401_UNAUTHORIZED
+
+    except NotFound as e:
+        key = str(e).split(':')[0]
+        val = f'user {user_id} does not exist; it cannot be modified'
+        content = {key : val}
+        return content, status.HTTP_404_NOT_FOUND
+
+    try:
+        new_uname = request.json.get('username')
+        new_about_me = request.json.get('about_me')
+    except Exception as e:
+        return str(e), status.HTTP_400_BAD_REQUEST
+
+    if UserModel.query.filter_by(username=new_uname).first() is None:
+
+        if new_uname is None and new_about_me is None:
+            return 'User modification fields empty', status.HTTP_204_NO_CONTENT
+
+        elif new_uname is None:
+            # user.update(dict(about_me=new_about_me))
+            user.about_me = new_about_me
+
+            db.session.commit()
+            key = 'Partial Content'
+            val = 'Username field empty; updated about_me'
+            s = 'About me field empty;' + \
+                f'Updated username from {user.username} to {new_uname}'
+            return {key:val}, status.HTTP_206_PARTIAL_CONTENT
+
+        elif new_about_me is None:
+            # user.update(dict(username=new_uname))
+            user.username = new_uname
+
+            key = 'Partial Content'
+            val = 'About me field empty; updated username'
+
+            db.session.commit()
+
+            return {key:val}, status.HTTP_206_PARTIAL_CONTENT
+        
+        else:
+            # user.update(dict(username=new_uname, about_me=new_about_me))
+            user.about_me = new_about_me
+            user.username = new_uname
+
+            db.session.commit()
+
+            key = 'Success'
+            val = 'Updated username and about_me'
+            return {key:val}, status.HTTP_202_ACCEPTED
+    else:
+        key = 'Invalid Username'
+        val = \
+            f'{new_uname} Already Taken'
+        content = {key : val}
+        return content, status.HTTP_409_CONFLICT
+
 @app.route('/api/user/<int:id>')
 def get_user(id):
     user_schema = UserSchema()
