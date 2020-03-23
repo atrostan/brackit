@@ -29,7 +29,6 @@ import random
 
 URL_PREFIX = 'http://127.0.0.1:5000/'
 headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
-cnx = sqlite3.connect(r'./app.db')
 
 # purge all tables first
 
@@ -42,7 +41,7 @@ Models = [
     UserModel, 
     LobbySeedModel
 ]
-
+cnx = sqlite3.connect(r'./app.db')
 db.session.close()
 def purge(Model):
     [db.session.delete(row) for row in Model.query.all()]
@@ -52,6 +51,8 @@ def purge(Model):
 [purge(Model) for Model in Models]
 db.session.commit()
 
+print(pd.read_sql_query('select * from tournament', cnx))
+print(pd.read_sql_query('select * from match', cnx))
 def handle_progression(tournament, tkn):
     """Mimic Progression Handling of a Tournament
     
@@ -65,41 +66,56 @@ def handle_progression(tournament, tkn):
     for bracket in tournament.brackets:
         for round in bracket.rounds:
             for match in round.matches:
-                print(match.id)
-                if match.id == 8:
-                    urlgf = \
-                        f'{URL_PREFIX}api/match/{match.id}/report-match'
-                    payloadgf = json.dumps({
-                        "entrant1_score": 0,
-                        "entrant2_score": 3,
-                        "winner": match.user_2,
-                        "loser": match.user_1
-                    })
-                elif match.id == 9:
-                    urlgfr = \
-                        f'{URL_PREFIX}api/match/{match.id}/report-match'
-                    payloadgfr = json.dumps({
-                        "entrant1_score": 3,
-                        "entrant2_score": 0,
-                        "winner": match.user_1,
-                        "loser": match.user_2
-                    })
-                else:
-                    url = \
-                        f'{URL_PREFIX}api/match/{match.id}/report-match'
-                    payload = json.dumps({
-                        "entrant1_score": 2,
-                        "entrant2_score": 0,
-                        "winner": match.user_1,
-                        "loser": match.user_2
-                    })
-                    r = requests.post(
-                        url, data=payload, headers=headers, 
-                        auth=(tkn, 'unused')
-                    )
+
+                url = \
+                    f'{URL_PREFIX}api/match/{match.id}/report-match'
+                score = np.random.randint(2, 6)
+                payload = json.dumps({
+                    "entrant1_score": score,
+                    "entrant2_score": score-2,
+                    "winner": match.user_1,
+                    "loser": match.user_2
+                })
+                r = requests.post(
+                    url, data=payload, headers=headers, 
+                    auth=(tkn, 'unused')
+                )
+
+                # print(match.id)
+                # if match.id == 8:
+                #     urlgf = \
+                #         f'{URL_PREFIX}api/match/{match.id}/report-match'
+                #     payloadgf = json.dumps({
+                #         "entrant1_score": 0,
+                #         "entrant2_score": 3,
+                #         "winner": match.user_2,
+                #         "loser": match.user_1
+                #     })
+                # elif match.id == 9:
+                #     urlgfr = \
+                #         f'{URL_PREFIX}api/match/{match.id}/report-match'
+                #     payloadgfr = json.dumps({
+                #         "entrant1_score": 3,
+                #         "entrant2_score": 0,
+                #         "winner": match.user_1,
+                #         "loser": match.user_2
+                #     })
+                # else:
+                #     url = \
+                #         f'{URL_PREFIX}api/match/{match.id}/report-match'
+                #     payload = json.dumps({
+                #         "entrant1_score": 2,
+                #         "entrant2_score": 0,
+                #         "winner": match.user_1,
+                #         "loser": match.user_2
+                #     })
+                #     r = requests.post(
+                #         url, data=payload, headers=headers, 
+                #         auth=(tkn, 'unused')
+                #     )
                 print(json.loads(r.content))
-    requests.post(urlgf, data=payloadgf, headers=headers, auth=(tkn, 'unused'))
-    requests.post(urlgfr, data=payloadgfr, headers=headers, auth=(tkn, 'unused'))
+    # requests.post(urlgf, data=payloadgf, headers=headers, auth=(tkn, 'unused'))
+    # requests.post(urlgfr, data=payloadgfr, headers=headers, auth=(tkn, 'unused'))
 
 
 def create_tournament(tournament_name):
@@ -125,8 +141,9 @@ def create_tournament(tournament_name):
     # posted a user
     df = pd.read_sql_query(q, cnx)
 
-    users = df.username.values
+    users = df.head(7).username.values
     np.random.shuffle(users)
+    print(len(users))
 
     url = f'{URL_PREFIX}api/lobby/{lobby_id}/add-user/'
     headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
@@ -154,13 +171,27 @@ def create_tournament(tournament_name):
     r = requests.post(url, data=payload, headers=headers, auth=(tkn, 'unused'))
     print(json.loads(r.content))
 
-    # create a tournament from lobby 1
-    url = 'http://127.0.0.1:5000/api/lobby/1/create-tournament/'
+    # create a tournament from lobby 
+    url = f'{URL_PREFIX}api/lobby/{lobby_id}/create-tournament/'
     headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
     payload = json.dumps({})
     r = requests.post(url, payload, headers=headers, auth=(tkn, 'unused'))
 
-    tid  = json.loads(r.content)
+    tid = json.loads(r.content)['tournament_id']
+
+    tournament = TournamentModel.query.filter_by(id=int(tid)).first_or_404()
+
+    # print(len(tournament.brackets.rounds.matches))
+    print(f'handling progression for tournament {tid}')
+
+    # get miguel's token / log miguel in
+    url = f'{URL_PREFIX}api/token'
+    r = requests.get(url, auth=('miguel', 'python'))
+    tkn = json.loads(r.content)['token']
+    print(pd.read_sql_query('select * from match', cnx))
+
+    # TO (miguel) can enter scores
+    handle_progression(tournament, tkn)
 
 
 
@@ -196,6 +227,16 @@ for username, email in users:
     r = requests.post(url, data=payload, headers=headers)
 
 
-[create_tournament(f'miguel.tourney.{i}') for i in range(5)]
+[create_tournament(f'miguel.tourney.{i}') for i in range(1)]
 
-print(pd.read_sql_query('select * from tournament', cnx))
+# print(pd.read_sql_query('select * from tournament', cnx))
+# print(pd.read_sql_query('select * from match', cnx))
+
+
+mid = UserModel.query.filter_by(username='miguel').first().id
+# show miguel's wins and losses:
+url = f'{URL_PREFIX}api/user/{mid}/winsandlosses'
+
+r = requests.get(url, headers=headers)
+print(json.loads(r.content))
+
