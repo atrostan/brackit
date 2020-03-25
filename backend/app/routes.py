@@ -491,6 +491,31 @@ def get_user(id):
     dump_data = user_schema.dump(user)
     return dump_data
 
+@app.route('/api/tournament/<int:id>/full')
+def tournament_full(id):
+    tournament_schema = TournamentSchema()
+    tournament = TournamentModel.query.filter_by(id=id).first_or_404()
+    tournament_data = tournament_schema.dump(tournament)
+    for i in range(len(tournament_data.get("brackets"))):
+        # bracket_schema = BracketSchema()
+        # bracket = BracketModel.query.filter_by(tournament_data.get("brackets")[i]).first_or_404()
+        # bracket_data = bracket_schema.dump(bracket)
+        bracket_data = bracket(tournament_data.get("brackets")[i])
+        for j in range(len(bracket_data.get("rounds"))): 
+            round_data = round(bracket_data.get("rounds")[j])
+            for k in range(len(round_data.get("matches"))):
+                match_data = match(round_data.get("matches")[k])
+                if match_data["u1"] is not None:
+                    match_data["u1"] = get_user(match_data.get("u1"))
+                if match_data["u2"] is not None:
+                    match_data["u2"] = get_user(match_data.get("u2"))
+                round_data.get("matches")[k] = match_data
+            bracket_data.get("rounds")[j] = round_data
+        for j in range(len(bracket_data.get("users"))):
+            bracket_data.get("users")[j] = get_user(bracket_data.get("users")[j])
+        tournament_data.get("brackets")[i] = bracket_data
+    return tournament_data
+
 @app.route('/api/tournament/<int:id>')
 def tournament(id):
     tournament_schema = TournamentSchema()
