@@ -523,6 +523,22 @@ def tournament(id):
     dump_data = tournament_schema.dump(tournament)
     return dump_data
 
+@app.route('/api/bracket/<int:id>/winners_losers_rounds')
+def bracket_winners_losers_rounds(id):
+    round_schema = RoundSchema()
+    rounds = RoundModel.query.filter_by(bracket_id=id).all()
+    dump_data = {
+        "winners_rounds":[],
+        "losers_rounds":[]
+    }
+    for r in rounds:
+        if r.winners == True:
+            dump_data["winners_rounds"].append(round_schema.dump(r))
+        else:
+            dump_data["losers_rounds"].append(round_schema.dump(r))
+    
+    return dump_data
+
 @app.route('/api/bracket/<int:id>')
 def bracket(id):
     bracket_schema = BracketSchema()
