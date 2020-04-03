@@ -398,6 +398,17 @@ def report_match(id):
                 match.loser_to.user_2_score = -1
                 match.loser_to.winner_to.input_user_to_match(loser_id)
                 db.session.add(match.loser_to.winner_to)
+            if (match.loser_to.user_2 is None and prev_match.user_1 is None and prev_match.user_2 is None and prev_match.user_2_score is None):
+                match.loser_to.winner = loser_id
+                match.loser_to.user_1_score = 0
+                match.loser_to.user_2_score = -1
+                match.loser_to.winner_to.input_user_to_match(loser_id)
+                db.session.add(match.loser_to.winner_to)
+
+                prev_match.winner = prev_match.user_1
+                prev_match.user_1_score = 0
+                prev_match.user_2_score = -1
+                db.session.add(prev_match)
         db.session.add(match.loser_to)
     
     db.session.add(match)
