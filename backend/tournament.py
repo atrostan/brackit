@@ -208,6 +208,11 @@ class Round:
                         self.bracket.rounds[r_idx].matches[m_idx]
                     )
                     #placeInLosers += 2
+                ## if first round bye, progress automatically
+                if self.number == 1 and self.matches[i].entrant1 == None:
+                    self.matches[i].inputScore(-1, 0, self.matches[i].entrant2, self.matches[i].entrant1)
+                elif self.number == 1 and self.matches[i].entrant2 == None:
+                    self.matches[i].inputScore(0, -1, self.matches[i].entrant1, self.matches[i].entrant2)
 
             if (self.isWinners == False):
                         
@@ -234,11 +239,6 @@ class Round:
                     self.matches[i].winnerPlaysInMatch(
                         self.bracket.rounds[r_idx].matches[m_idx]
                     )
-            ## if first round bye, progress automatically
-            if self.number == 1 and self.matches[i].entrant1 == None:
-                self.matches[i].inputScore(-1, 0, self.matches[i].entrant2, self.matches[i].entrant1)
-            elif self.number == 1 and self.matches[i].entrant2 == None:
-                self.matches[i].inputScore(0, -1, self.matches[i].entrant1, self.matches[i].entrant2)
                 
 
 class Match:
