@@ -20,19 +20,18 @@ import java.io.IOException;
 
 class LoginActivity : AppCompatActivity() {
     var client = OkHttpClient()
-    val requestURL = "http://192.168.0.33:5000/api/"
-
-    var USER:String = ""
-    var PASS:String=""
+    val requestURL = "http://10.0.2.2:5000/api/"
+    //val requestURL = "http://172.20.10.2:5000/api/"
+    var token = ""
+    var user = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
-
-
         setContentView(R.layout.activity_login)
+        title = "Login"
+
         val username = findViewById<EditText>(R.id.username) as EditText
         val password = findViewById<EditText>(R.id.password) as EditText
         val login = findViewById<Button>(R.id.login) as Button
@@ -44,8 +43,7 @@ class LoginActivity : AppCompatActivity() {
             val nameStr = username.text.toString()
             val passStr = password.text.toString()
 
-            Okhttp(nameStr,passStr,1)
-
+            getlogin(nameStr,passStr)
         }
 
         signup.setOnClickListener{
@@ -101,25 +99,25 @@ class LoginActivity : AppCompatActivity() {
                 var userid = response.headers["location"]!!.split("/").takeLast(1)[0]
 
 
-                getlogin(name,pass)
 
-                Okhttp(name,pass,userid.toInt())
+                getlogin(username,pass)
+
+                //Okhttp(name,pass,userid.toInt())
             }else{}
-
-
 
         }
     }
 
     private fun getlogin(name:String,pass:String){
-        var name1 = name.split("@")[0]
         var client = OkHttpClient()
 
         println(name+"--------------"+pass)
 
+        val credential = Credentials.basic(name, pass)
+
         val request = Request.Builder()
             .url(requestURL+"login")
-            .addHeader(name1,pass)
+            .header("Authorization",credential)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -132,15 +130,21 @@ class LoginActivity : AppCompatActivity() {
             //http response
             override fun onResponse(call: Call, response: Response) {
                 response.use {
-                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                    println(response.body!!.string()+"------------------")
+                    if (!response.isSuccessful){
+                        println("Unexpected code $response")
+                        runOnUiThread{
+                            Toast.makeText(this@LoginActivity, "Username or Password incorrect", Toast.LENGTH_SHORT).show()
+                        }
+                    }
 
+                    if (response.code == 200){
+                        var json = JSONObject(response.body!!.string())
+                        var userID = json["id"] as Int
+                        Okhttp(name,pass,userID)
+                    }
                 }
             }
         })
-
-
-
 
     }
 
@@ -167,25 +171,64 @@ class LoginActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
                     val json = JSONObject(response.body!!.string())
+                    user = json.toString()
 
-//                    if (nameStr.isEmpty() && passStr.isEmpty()){
-                        // user has correct emial and password go back to homescreen
-                        println("Password correct")
+                    getToken(nameStr,passStr)
 
-                        val myIntent = Intent(applicationContext, MainActivity::class.java)
-                        //return user json
-                        myIntent.putExtra("user",json.toString())
-                        startActivityForResult(myIntent, 0)
-                        finish()
-//                    }
-
-                    println("=========================================")
-
+                    println("Password correct")
                 }
             }
         })
     }
+
+    private fun getToken(name: String, pass: String){
+        var client = OkHttpClient()
+
+
+        val credential = Credentials.basic(name, pass)
+
+        val request = Request.Builder()
+            .url(requestURL+"token")
+            .header("Authorization",credential)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful){
+                        println("Unexpected code $response")
+                        runOnUiThread{
+                            Toast.makeText(this@LoginActivity, "Username or Password incorrect", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    if (response.code == 200){
+                        var json = JSONObject(response.body!!.string())
+                        token = json["token"] as String
+                        print("==========================================${token}")
+                    }
+
+                    val myIntent = Intent(applicationContext, MainActivity::class.java)
+                    //return user json
+                    myIntent.putExtra("user",user)
+                    myIntent.putExtra("token",token)
+                    startActivityForResult(myIntent, 0)
+                    finish()
+                }
+            }
+        })
+    }
+
+
 
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

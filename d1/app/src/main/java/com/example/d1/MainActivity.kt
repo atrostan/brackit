@@ -1,10 +1,7 @@
 package com.example.d1
 
-import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.LayoutInflater
 import androidx.core.view.GravityCompat
 import androidx.appcompat.app.ActionBarDrawerToggle
 import android.view.MenuItem
@@ -16,32 +13,28 @@ import android.view.View
 import android.widget.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.widget.Toast
-import android.widget.LinearLayout
-import com.android.volley.toolbox.JsonObjectRequest
 import com.example.d1.dao.Tournament
 import com.example.d1.dao.User
-import com.example.d1.login.LoginActivity
 import org.json.JSONObject
 import com.google.gson.Gson
 import okhttp3.*
+import org.json.JSONArray
 import java.io.IOException
 
-
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    val requestURL = "http://192.168.0.33:5000/api/"
+    val requestURL = "http://10.0.2.2:5000/api/"
+    //val requestURL = "http://172.20.10.2:5000/api/"
     var client = OkHttpClient()
     private var LOG_IN = false
-    lateinit var user:User
+    var user: User? = null
     var jsonString = "nouser"
     var TournamentId = 0
     var Tournament_user_have = arrayListOf<Int>()
-
-
-
-    var t1 = Tournament(arrayListOf("Patrycja","Cheyenne","Jolene","Roxy"), arrayListOf(1,2,3,4),"Valentine's Day Lead-Off of the World Tournament")
-    var t2 = Tournament(arrayListOf("Katie","Needham","Fox","Findlay"), arrayListOf(1,2,3,4),"By the Beach Labor Day 1st Down Tournament")
-    var t3 = Tournament(arrayListOf("Roxy","Dunkley","Kofi","Erickson"), arrayListOf(1,2,3,4),"Push the button again, I dare you.")
-    var t4 = Tournament(arrayListOf("Patrycja","Cheyenne"), arrayListOf(3,4),"Epic Last Day of School Back of the Net Tournament")
+    var EDIT = false
+    var TOKEN = ""
+    var lossesList = arrayListOf<String>()
+    var userList = arrayListOf<String>()
+    var winsList = arrayListOf<String>()
 
     var tournamentsName = arrayListOf("Valentine's Day Lead-Off of the World Tournament",
         "By the Beach Labor Day 1st Down Tournament","Push the button again, I dare you.","Epic Last Day of School Back of the Net Tournament")
@@ -49,23 +42,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     var imageId = arrayListOf(R.drawable.tournament,R.drawable.tournament,R.drawable.tournament,R.drawable.tournament)
     private lateinit var list: ListView
 
-    /*
-    *
-    * R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera,
-        R.drawable.ic_menu_camera
-        *
-        * */
-
-
-
-    var date = arrayListOf("date1","date2")
-    var score = arrayListOf("score1","score2")
-    var u1 = arrayListOf(1,2)
-    var u2 = arrayListOf(3,4)
 
 
         //when the bottom tab selected
@@ -73,7 +49,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_home -> {
-                textMessage.setText(R.string.title_home)
+               // textMessage.setText(R.string.title_home)
                 return@OnNavigationItemSelectedListener true
             }
 //            R.id.navigation_notifications -> {
@@ -91,10 +67,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        list = findViewById(R.id.list)
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         //reset header
         resetHeader("Sign in","")
+
+        //clear stats listview
+        clearStatsAdapter()
 
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
@@ -112,11 +93,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bottomNavView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
 
 
-        var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
-        val list = findViewById<ListView>(R.id.list)
-        list.adapter = listAdapter
-
-
 
 
         //after user login
@@ -130,35 +106,79 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 user = gson.fromJson(jsonString,User::class.java)
                 println(user)
                 //set header with user name and email
-                resetHeader(user.username,user.email)
+                resetHeader(user!!.username,user!!.email)
                 //set create tournament visible
                 var menu = navView.menu
                 var nav_cTournament = menu.findItem(R.id.nav_createTournament)
                 var nav_history = menu.findItem(R.id.nav_history)
                 var nav_logout = menu.findItem(R.id.nav_logout)
+                var nav_stats = menu.findItem(R.id.nav_stats)
+                var nav_edit_tournament = menu.findItem(R.id.nav_edit_tournament)
+                nav_edit_tournament.setVisible(true)
                 nav_cTournament.setVisible(true)
                 nav_history.setVisible(true)
                 nav_logout.setVisible(true)
+                nav_stats.setVisible(true)
             }
 
         }
 
-        if (intent.hasExtra("tId")){
-            var a = intent.getStringExtra("tId")
-            TournamentId = a.toInt()
-            println("-------------$a-----------------tId in mainactivity")
-            Tournament_user_have.add(TournamentId)
-            getTournament(TournamentId)
+        if (intent.hasExtra("token")){
+            TOKEN = intent.getStringExtra("token")
         }
 
+        //update home page tournaments
+        runOnUiThread {
+            var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+            val list = findViewById<ListView>(R.id.list)
+            listAdapter.notifyDataSetChanged()
+            list.adapter = listAdapter
+        }
+
+
+        if (jsonString != "nouser"){
+            getUserTournaments()
+        }
+
+
         list.setOnItemClickListener { parent, view, position, id ->
-            println("------------------------")
-            Toast.makeText(this, "You Clicked at " +tournamentsName[+ position], Toast.LENGTH_SHORT).show();
-            val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
-            //can pass any data
-            intent.putExtra("user",jsonString)
-            startActivity(intent)
-            finish()
+            if (EDIT){
+                Toast.makeText(this, "You Clicked at " +tournamentsName[+ position], Toast.LENGTH_SHORT).show();
+                val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
+                //can pass any data
+                intent.putExtra("user",jsonString)
+                intent.putExtra("token",TOKEN)
+                intent.putExtra("edit","EDIT")
+                if(!tournamentsName[+ position].contains("]")){
+                    intent.putExtra("tId","1")
+                }else{
+                    var a = tournamentsName.get(+position).split("[","]")
+                    var id = a.get(1).toInt()
+                    print("$a====================================")
+                    intent.putExtra("tId","$id")
+                }
+
+                startActivity(intent)
+                finish()
+            }else{
+                println("------------------------")
+                Toast.makeText(this, "You Clicked at " +tournamentsName[+ position], Toast.LENGTH_SHORT).show();
+                val intent = intent.setClassName(this,"com.example.d1.tournament.TournamentActivity")
+                //can pass any data
+                intent.putExtra("user",jsonString)
+                intent.putExtra("token",TOKEN)
+                if(!tournamentsName[+ position].contains("]")){
+                    intent.putExtra("tId","1")
+                }else{
+                    var a = tournamentsName.get(+position).split("[","]")
+                    var id = a.get(1).toInt()
+                    print("$a====================================")
+                    intent.putExtra("tId","$id")
+                }
+
+                startActivity(intent)
+                finish()
+            }
         }
 
     }
@@ -178,6 +198,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.nav_home -> {
+                clearStatsAdapter()
+                EDIT = false
+
+                //set list view visible
+                listView(true)
+                runOnUiThread{
+
                 tournamentsName.clear()
                 imageId.clear()
                 var tournamentsName1 = arrayListOf("Valentine's Day Lead-Off of the World Tournament",
@@ -188,53 +215,130 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 tournamentsName.addAll(tournamentsName1)
                 imageId.addAll(imageId1)
 
-                var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
-                val list = findViewById<ListView>(R.id.list)
-                listAdapter.notifyDataSetChanged()
-                list.adapter = listAdapter
 
-                for (i in Tournament_user_have){
-                    getTournament(i)
+                    var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                    val list = findViewById<ListView>(R.id.list)
+                    listAdapter.notifyDataSetChanged()
+                    list.adapter = listAdapter
                 }
-
 
             }
             R.id.nav_notification -> {
-                textMessage.setText(R.string.menu_notification)
+                //set list view invisible
+                listView(false)
+
+                clearStatsAdapter()
+                //textMessage.setText(R.string.menu_notification)
+
+                EDIT = false
             }
             R.id.nav_history -> {
+                clearStatsAdapter()
+                EDIT = false
+
+                //set list view visible
+                listView(true)
+                runOnUiThread{
+
                 tournamentsName.clear()
                 imageId.clear()
 
-                var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
-                val list = findViewById<ListView>(R.id.list)
-                listAdapter.notifyDataSetChanged()
-                list.adapter = listAdapter
 
-                for (i in Tournament_user_have){
-                    getTournament(i)
+                    var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                    val list = findViewById<ListView>(R.id.list)
+                    listAdapter.notifyDataSetChanged()
+                    list.adapter = listAdapter
                 }
+
+//                for (i in Tournament_user_have){
+//                    getTournament(i)
+//                }
+                getUserTournaments()
+            }
+            R.id.nav_edit_tournament -> {
+                EDIT = true
+                clearStatsAdapter()
+
+                //set list view visible
+                listView(true)
+                runOnUiThread{
+
+                    tournamentsName.clear()
+                    imageId.clear()
+
+
+                    var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                    val list = findViewById<ListView>(R.id.list)
+                    listAdapter.notifyDataSetChanged()
+                    list.adapter = listAdapter
+                }
+
+//                for (i in Tournament_user_have){
+//                    getTournament(i)
+//                }
+                getUserTournaments()
+
+
+
+            }
+            R.id.nav_stats -> {
+                EDIT = false
+                //clear screen
+                runOnUiThread{
+
+
+                    tournamentsName.clear()
+                    imageId.clear()
+
+
+                    var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
+                    val list = findViewById<ListView>(R.id.list)
+                    listAdapter.notifyDataSetChanged()
+                    list.adapter = listAdapter
+                }
+
+                //set list view invisible
+                listView(false)
+
+                //read all stats
+                getStats()
             }
             R.id.nav_createTournament -> {
+
                 var gson=Gson();
                 var userString = gson.toJson(user)
                 val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
                 intent.putExtra("user",jsonString)
-                intent.putExtra("tId",TournamentId.toString())
+                intent.putExtra("token",TOKEN)
+                //intent.putExtra("tId",TournamentId.toString())
                 startActivityForResult(intent,0)
                 finish()
             }
             R.id.nav_logout ->{
+                clearStatsAdapter()
+
+                //set list view visible
+                listView(true)
+
                 resetHeader("Sign in","")
                 val navView: NavigationView = findViewById(R.id.nav_view)
                 var menu = navView.menu
                 var nav_cTournament = menu.findItem(R.id.nav_createTournament)
                 var nav_history = menu.findItem(R.id.nav_history)
                 var nav_logout = menu.findItem(R.id.nav_logout)
+                var nav_stats = menu.findItem(R.id.nav_stats)
+                var nav_edit_tournament = menu.findItem(R.id.nav_edit_tournament)
                 nav_cTournament.setVisible(false)
                 nav_history.setVisible(false)
                 nav_logout.setVisible(false)
+                nav_stats.setVisible(false)
+                nav_edit_tournament.setVisible(false)
+                logOut()
                 LOG_IN = false
+                jsonString = "nouser"
+                user = null
+
+                EDIT = false
 
             }
         }
@@ -252,7 +356,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             //can pass any data
             //intent.putExtra()
             startActivity(intent)
-           // finish()
+            finish()
         }
 
     }
@@ -300,10 +404,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                     var name = json["name"] as String
 
-                    tournamentsName.add(name)
-                    imageId.add(R.drawable.tournament)
-
                     runOnUiThread{
+                        tournamentsName.add("[${json["id"]}]"+name)
+                        imageId.add(R.drawable.tournament)
+
+
                         var listAdapter = HomeList(this@MainActivity, tournamentsName, imageId)
                         val list = findViewById<ListView>(R.id.list)
                         listAdapter.notifyDataSetChanged()
@@ -312,6 +417,178 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                     println("=========================================")
                     //  text.text = "Response: "+json + "   "+ brackets.javaClass.name
+
+                }
+            }
+        })
+    }
+
+    private fun getUserTournaments(){
+        var gson = Gson()
+        var user = gson.fromJson(jsonString,User::class.java)
+
+        var request = Request.Builder()
+            .url(requestURL+"user/${user.id}/tournaments/")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //     var text = findViewById<TextView>(R.id.name)
+                    val json = JSONArray(response.body!!.string())
+                    for (i in 0 until json.length()){
+                        println("-------- ${json.getJSONObject(i)["id"]} -----------")
+                        getTournament(json.getJSONObject(i)["id"] as Int);
+                    }
+
+                }
+            }
+        })
+    }
+
+    private fun getStats(){
+        var gson = Gson()
+        var user = gson.fromJson(jsonString,User::class.java)
+
+        var request = Request.Builder()
+            .url(requestURL+"user/${user.id}/winsandlosses")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //     var text = findViewById<TextView>(R.id.name)
+                    val json = JSONArray(response.body!!.string())
+
+                    for (i in 0 until json.length()){
+                        var losses = json.getJSONObject(i)["Losses"] as Int
+                        var user = json.getJSONObject(i)["User"] as Int
+                        var wins = json.getJSONObject(i)["Wins"] as Int
+
+
+
+                        lossesList.add(losses.toString())
+                        //userList.add(user.toString())
+                        winsList.add(wins.toString())
+
+                        getUser(user)
+                    }
+
+
+//                    runOnUiThread{
+//                        var statsAdapter = StatsList(this@MainActivity,lossesList,userList,winsList)
+//                        val list = findViewById<ListView>(R.id.stats_list)
+//                        list.visibility = View.VISIBLE
+//                        statsAdapter.notifyDataSetChanged()
+//                        list.adapter = statsAdapter
+//                    }
+                }
+            }
+        })
+    }
+
+
+    private fun clearStatsAdapter(){
+        var lossesList = arrayListOf<String>()
+        var userList = arrayListOf<String>()
+        var winsList = arrayListOf<String>()
+        var statsAdapter = StatsList(this@MainActivity,lossesList,userList,winsList)
+        runOnUiThread{
+            val list = findViewById<ListView>(R.id.stats_list)
+            statsAdapter.notifyDataSetChanged()
+            list.adapter = statsAdapter
+            list.visibility = View.INVISIBLE
+        }
+
+    }
+
+    private fun listView(b:Boolean){
+        val list = findViewById<ListView>(R.id.list)
+        if(b){
+            list.visibility = View.VISIBLE
+        }else{
+            list.visibility = View.INVISIBLE
+        }
+    }
+
+    private fun getUser(id:Int){
+        var gson = Gson()
+        var user = gson.fromJson(jsonString,User::class.java)
+
+        var request = Request.Builder()
+            .url(requestURL+"user/$id")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //     var text = findViewById<TextView>(R.id.name)
+                    val json = response.body!!.string()
+                    var gson = Gson()
+                    var user = gson.fromJson(json,User::class.java)
+
+                    runOnUiThread{
+                        userList.add(user.username)
+
+                        println(winsList)
+
+                        var statsAdapter = StatsList(this@MainActivity,lossesList,userList,winsList)
+                        val list = findViewById<ListView>(R.id.stats_list)
+                        list.visibility = View.VISIBLE
+                        statsAdapter.notifyDataSetChanged()
+                        list.adapter = statsAdapter
+                    }
+                }
+            }
+        })
+    }
+
+    fun logOut(){
+        var client = OkHttpClient()
+
+        val credential = Credentials.basic(TOKEN, "unused")
+
+        val request = Request.Builder()
+            .url(requestURL+"logout")
+            .header("Authorization",credential)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    println(response.body!!.string()+"------------------")
 
                 }
             }

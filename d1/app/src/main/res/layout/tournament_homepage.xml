@@ -46,7 +46,6 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:onClick="onPrevClick"
                 android:text="Prev Round" />
 
         <TextView
@@ -63,7 +62,6 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:onClick="onNextClick"
                 android:text="Next Round" />
     </LinearLayout>
 

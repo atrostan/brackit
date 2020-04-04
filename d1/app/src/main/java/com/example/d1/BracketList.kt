@@ -10,8 +10,8 @@ import android.widget.ImageView
 import android.widget.TextView
 
 class BracketList (private val context: Activity,
-                   private val date: ArrayList<String>, private val u1: ArrayList<Int>,
-                   private val score: ArrayList<String>,private val u2:ArrayList<Int>
+                   private val date: ArrayList<String>, private val u1: ArrayList<String>,
+                   private val score: ArrayList<String>,private val u2:ArrayList<String>
 ) : ArrayAdapter<String>(context, R.layout.bracket_list_single, date) {
     override fun getView(position: Int, view: View?, parent: ViewGroup): View {
         val inflater = context.layoutInflater

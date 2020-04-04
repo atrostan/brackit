@@ -18,6 +18,8 @@
         <activity
                 android:name="com.example.d1.tournament.TournamentActivity">
         </activity>
+        <activity android:name="com.example.d1.tournament.EditTournamentActivity"></activity>
+        <activity android:name="com.example.d1.tournament.EditScoreActivity"></activity>
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
