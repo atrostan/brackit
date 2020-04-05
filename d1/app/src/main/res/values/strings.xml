@@ -23,4 +23,10 @@
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
     <string name="create_tournament">"Create Tournament"</string>
+
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="last_seen">Last seen</string>
+    <string name="about_me">About me</string>
+    <string name="edit_button">Edit</string>
 </resources>

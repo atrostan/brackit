@@ -114,11 +114,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 var nav_logout = menu.findItem(R.id.nav_logout)
                 var nav_stats = menu.findItem(R.id.nav_stats)
                 var nav_edit_tournament = menu.findItem(R.id.nav_edit_tournament)
+                var nav_profile = menu.findItem(R.id.nav_profile)
                 nav_edit_tournament.setVisible(true)
                 nav_cTournament.setVisible(true)
                 nav_history.setVisible(true)
                 nav_logout.setVisible(true)
                 nav_stats.setVisible(true)
+                nav_profile.setVisible(true)
             }
 
         }
@@ -223,14 +225,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
 
             }
-            R.id.nav_notification -> {
-                //set list view invisible
-                listView(false)
-
-                clearStatsAdapter()
-                //textMessage.setText(R.string.menu_notification)
+            R.id.nav_profile -> {
+//                //set list view invisible
+//                listView(false)
+//
+//                clearStatsAdapter()
+//                //textMessage.setText(R.string.menu_notification)
 
                 EDIT = false
+
+                val intent = intent.setClassName(this,"com.example.d1.login.ProfileActivity")
+                intent.putExtra("user",jsonString)
+                intent.putExtra("token",TOKEN)
+                //intent.putExtra("tId",TournamentId.toString())
+                startActivityForResult(intent,0)
+                finish()
             }
             R.id.nav_history -> {
                 clearStatsAdapter()
@@ -250,9 +259,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     list.adapter = listAdapter
                 }
 
-//                for (i in Tournament_user_have){
-//                    getTournament(i)
-//                }
                 getUserTournaments()
             }
             R.id.nav_edit_tournament -> {
@@ -273,13 +279,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     list.adapter = listAdapter
                 }
 
-//                for (i in Tournament_user_have){
-//                    getTournament(i)
-//                }
                 getUserTournaments()
-
-
-
             }
             R.id.nav_stats -> {
                 EDIT = false
@@ -304,9 +304,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 getStats()
             }
             R.id.nav_createTournament -> {
-
-                var gson=Gson();
-                var userString = gson.toJson(user)
                 val intent = intent.setClassName(this,"com.example.d1.tournament.CreateTournamentActivity")
                 intent.putExtra("user",jsonString)
                 intent.putExtra("token",TOKEN)
@@ -328,11 +325,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 var nav_logout = menu.findItem(R.id.nav_logout)
                 var nav_stats = menu.findItem(R.id.nav_stats)
                 var nav_edit_tournament = menu.findItem(R.id.nav_edit_tournament)
+                var nav_profile = menu.findItem(R.id.nav_profile)
                 nav_cTournament.setVisible(false)
                 nav_history.setVisible(false)
                 nav_logout.setVisible(false)
                 nav_stats.setVisible(false)
                 nav_edit_tournament.setVisible(false)
+                nav_profile.setVisible(false)
                 logOut()
                 LOG_IN = false
                 jsonString = "nouser"
