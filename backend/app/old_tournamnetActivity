@@ -1,0 +1,441 @@
+package com.example.d1.tournament
+
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.view.MenuItem
+import android.view.View
+import android.widget.ListView
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.example.d1.BracketList
+import com.example.d1.MainActivity
+import com.example.d1.R
+import com.example.d1.dao.Match
+import com.google.gson.Gson
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+
+
+class TournamentActivity : AppCompatActivity(){
+
+    val requestURL = "http://10.0.2.2:5000/api/"
+    //val requestURL = "http://172.20.10.2:5000/api/"
+    var userString = "nouser"
+    var client = OkHttpClient()
+    var currentRound = 0
+    var totalRounds:Int = 0
+    lateinit var preText:TextView
+    lateinit var nextText:TextView
+    lateinit var roundText:TextView
+    var TournamentId = 0
+    var realRound = 0
+    var realRound_loser = 0
+    var u1Name:String= ""
+    var u2Name:String=""
+
+     var date:ArrayList<String> = arrayListOf()
+     var score: ArrayList<String> = arrayListOf()
+     var u1: ArrayList<String> = arrayListOf()
+     var u2:ArrayList<String> = arrayListOf()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.tournament_homepage)
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        if (intent.hasExtra("user")){
+
+            userString = intent.getStringExtra("user")
+        }
+
+        preText = findViewById(R.id.last_round)
+        nextText = findViewById(R.id.next_round)
+        roundText = findViewById(R.id.current_round)
+
+        roundText.text = "Round ${currentRound+1}"
+
+        if(currentRound == 0){
+            preText.visibility = View.INVISIBLE
+        }
+
+
+        if (intent.hasExtra("tId")){
+            var a = intent.getStringExtra("tId")
+            TournamentId = a.toInt()
+            println("-------------------$TournamentId in TournamentActivity")
+            getTournament(TournamentId)
+        }else{
+            TournamentId = 0
+            getTournament(1)
+        }
+
+//        setContentView(R.layout.bracket_list_single)
+//        var scoreView = findViewById<TextView>(R.id.score)
+//        scoreView.setOnClickListener {
+//            println("-------------------This is score")
+//            Toast.makeText(this, "You Clicked at Score", Toast.LENGTH_SHORT).show();
+//        }
+
+
+
+
+
+        //navigate back
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    private fun getTournament(id: Int) {
+        val request = Request.Builder()
+            .url(requestURL+"tournament/"+ "$id")
+            .build()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+               //     var text = findViewById<TextView>(R.id.name)
+                    val json = JSONObject(response.body!!.string())
+
+                    var brackets = json["brackets"] as JSONArray
+                    var bid = brackets.getInt(0)
+
+                    println("=========================================")
+                  //  text.text = "Response: "+json + "   "+ brackets.javaClass.name
+
+                    getBracket(bid)
+
+                }
+            }
+        })
+    }
+
+    private fun getBracket(id: Int) {
+        val request = Request.Builder()
+            .url(requestURL+"bracket/"+ "$id")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                 //   var text = findViewById<TextView>(R.id.name)
+                    val json = JSONObject(response.body!!.string())
+
+                    var rounds = json["rounds"] as JSONArray
+
+                    totalRounds = rounds.length()/2 + 1
+
+                    realRound = rounds.getInt(0)
+
+                    realRound_loser = rounds.getInt(totalRounds)
+
+                    println("realRound-------------------$realRound")
+                    println("realRound_loser-------------------$realRound_loser")
+
+                    getRound(realRound)
+
+
+                    println("=========================================")
+                    //    text.text = "Response: "+json + "   "+ rounds + " "
+
+                }
+            }
+        })
+    }
+
+    private fun getLoserRound(id: Int) {
+
+        setBracket("","Bracket","Losers","")
+
+        var json = JSONObject()
+
+        val request = Request.Builder()
+            .url(requestURL+"round/$id")
+            .build()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //var text = findViewById<TextView>(R.id.name)
+                    json = JSONObject(response.body!!.string())
+                    //roundsList.add(json)
+
+                    var matchList:ArrayList<Match> = ArrayList()
+
+                    var matchs = json["matches"] as JSONArray
+
+                    for(i in 0 until matchs.length()){
+                        println("--------${matchs.getInt(i)} real match id--------")
+
+                        getMatch(matchs.getInt(i))
+                    }
+
+
+
+
+
+                    println("====================getRound=====================")
+                    println(date+"------------date")
+                    println(score+"------------date")
+                    println(u1+"------------date")
+                    println(u2+"------------date")
+
+                    runOnUiThread {
+                        var listAdapter = BracketList(this@TournamentActivity,date,u1,score,u2)
+                        listAdapter.notifyDataSetChanged()
+                        val list = findViewById<ListView>(R.id.list_tournament)
+                        list.adapter = listAdapter
+                    }
+
+
+
+                }
+            }
+        })
+    }
+
+    private fun getRound(id: Int) {
+
+        clearBracket()
+
+        var json = JSONObject()
+
+        val request = Request.Builder()
+            .url(requestURL+"round/$id")
+            .build()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("==============FAIL==========")
+                e.printStackTrace()
+
+            }
+
+            //http response
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    //var text = findViewById<TextView>(R.id.name)
+                    json = JSONObject(response.body!!.string())
+                    //roundsList.add(json)
+
+                    var matchList:ArrayList<Match> = ArrayList()
+
+                    var matchs = json["matches"] as JSONArray
+
+                    for(i in 0 until matchs.length()){
+                        println("--------${matchs.getInt(i)} real match id--------")
+
+                        getMatch(matchs.getInt(i))
+                    }
+
+
+
+
+
+                    println("====================getRound=====================")
+                    println(date+"------------date")
+                    println(score+"------------date")
+                    println(u1+"------------date")
+                    println(u2+"------------date")
+
+                    runOnUiThread {
+                        setContentView(R.layout.tournament_homepage)
+                        var listAdapter = BracketList(this@TournamentActivity,date,u1,score,u2)
+                        listAdapter.notifyDataSetChanged()
+                        val list = findViewById<ListView>(R.id.list_tournament)
+                        list.adapter = listAdapter
+                    }
+
+                    if(currentRound != totalRounds-1){
+                        var round_loser = getLoserRound(realRound_loser)
+                    }
+                }
+            }
+        })
+    }
+
+
+
+    private fun getMatch(id:Int){
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(requestURL+"match/$id")
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+            var a = response.body!!.string()
+
+            var gson = Gson()
+            var matchOb = gson.fromJson(a,Match::class.java)
+
+            //setBracket("dateTemp","0 : 0",matchOb.u1.toString(),matchOb.u2.toString())
+
+            if (matchOb.u1 != 0 && matchOb.u2 != 0){
+//                getUser(matchOb.u1,1)
+//                getUser(matchOb.u2,2)
+                setBracket("dateTemp","0 : 0",matchOb.u1.toString(),matchOb.u2.toString())
+
+            }else if(matchOb.u1 == 0 || matchOb.u2 == 0){
+                setBracket("dateTemp","0 : 0","null","null")
+            }
+
+        }
+
+
+    }
+
+    fun getUser(id: Int,user:Int) {
+            //http://10.0.2.2:5000/match/1 //android simulator should use 10.0.2.2 replace 127.0.0.1
+            val request = Request.Builder()
+                .url(requestURL+"user/$id")
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    println("==============FAIL==========")
+                    e.printStackTrace()
+
+                }
+
+                //http response
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                        val json = JSONObject(response.body!!.string())
+
+                        if (user == 1){
+                            u1Name = json["username"] as String
+                        }else{
+                            u2Name = json["username"] as String
+                            setBracket("dateTemp","0 : 0",u1Name,u2Name)
+                        }
+
+
+
+
+                        println("=========================================")
+
+                    }
+                }
+            })
+    }
+
+    private fun setBracket(date1:String,score1:String,u11:String,u21:String){
+        date.add(date1)
+        score.add(score1)
+        u1.add(u11)
+        u2.add(u21)
+    }
+
+    private fun clearBracket(){
+        date = arrayListOf()
+        score = arrayListOf()
+        u1= arrayListOf()
+        u2 = arrayListOf()
+    }
+
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        val myIntent = Intent(applicationContext, MainActivity::class.java)
+        myIntent.putExtra("user",userString)
+        //myIntent.putExtra("tId",TournamentId.toString())
+        startActivityForResult(myIntent, 0)
+        finish()
+        return true
+    }
+
+    fun onPrevClick(v:View){
+        if (preText.visibility == View.VISIBLE){
+           // var text = findViewById<TextView>(R.id.name)
+
+
+            if (currentRound -1 >=0){
+                currentRound-=1
+                roundText.text = "Round ${currentRound+1}"
+            }
+
+            if(currentRound == 0){
+                preText.visibility = View.INVISIBLE
+            }
+            if(currentRound != totalRounds-1){
+                nextText.visibility = View.VISIBLE
+            }
+
+            realRound-=1
+            realRound_loser-=1
+            println("--------$realRound--------")
+
+            var round = getRound(realRound)
+
+            println("realRound-------------------$realRound")
+            println("realRound_loser-------------------$realRound_loser")
+
+
+        }
+
+    }
+
+    fun onNextClick(v:View){
+        if(nextText.visibility == View.VISIBLE){
+            if (currentRound + 1 < totalRounds){
+                currentRound+=1
+                roundText.text = "Round ${currentRound+1}"
+            }
+
+            if(currentRound != 0){
+                preText.visibility = View.VISIBLE
+            }
+            if(currentRound == totalRounds-1){
+                nextText.visibility = View.INVISIBLE
+            }
+
+            realRound+=1
+            realRound_loser+=1
+            println("--------$realRound--------")
+
+            var round = getRound(realRound)
+
+            println("realRound-------------------$realRound")
+            println("realRound_loser-------------------$realRound_loser")
+
+
+
+        }
+
+    }
+
+
+
+}
