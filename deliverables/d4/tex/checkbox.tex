@@ -1,0 +1,219 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry}
+% \usepackage{cite}
+% \usepackage{colortbl}
+% \usepackage{booktabs}% http://ctan.org/pkg/booktabs
+% \newcommand{\tabitem}{~~\llap{\textbullet}~~}
+% \usepackage{subcaption}
+% \usepackage{titlesec}% http://ctan.org/pkg/titlesec
+% \titleformat{\section}%
+%     [hang]% <shape>
+%     {\normalfont\bfseries\Large}% <format>
+%     {}% <label>
+%     {0pt}% <sep>
+%     {}% <before code>
+% \renewcommand{\thesection}{}% Remove section references...
+% \renewcommand{\thesubsection}{\arabic{subsection}}%... from subsections
+% \usepackage{bookmark}
+% \usepackage{enumitem}
+% \usepackage{multicol}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{bbding}
+\usepackage[normalem]{ulem}
+\usepackage{enumitem,amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\textcolor{green}{\cmark}}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\textcolor{red}\large\hspace{1pt}\xmark}}
+\newcommand{\partly}{\rlap{$\square$}{\large\hspace{1pt}\textcolor{green}{\ding{51}}
+\textsuperscript{\textcolor{red}{\kern-0.5em\tiny\ding{55}}}}}
+
+\begin{document}
+\begin{center}
+
+    % MAKE SURE YOU TAKE OUT THE SQUARE BRACKETS
+
+    \LARGE{\textbf{COMP 3004 - Deliverable \#4 - Retrospective}} \\
+    \vspace{1em}
+    \Large{\href{https://github.com/alextrosta/brackit}{\texttt{Brackit}} - Mobile Tournament Bracket Creation} \\
+    \vspace{1em}
+    \normalsize\textbf{Jaime Herzog, Suohong Liu, Xiyi Liu, Alex Trostanovsky} \\
+    \normalsize{
+        \href{mailto:jaime.herzog@carleton.ca}{jaime.herzog@carleton.ca},
+        \href{mailto:suohong.liu@carleton.ca}{suohong.liu@carleton.ca},
+        \href{mailto:xiyi.liu@carleton.ca}{xiyi.liu@carleton.ca},
+        \href{mailto:alex.trostanovsky@carleton.ca}{alex.trostanovsky@carleton.ca}
+    }
+    % \vspace{1em}
+    % \normalsize{Carleton University, School of Computer Science} \\
+
+\end{center}
+\begin{normalsize}
+
+\end{normalsize}
+
+\section*{Metadata}
+\subsection*{Team / App Name: \href{https://github.com/alextrosta/brackit}{\texttt{Brackit}}}
+\textbf{Team Member Names:}\\ Jaime Herzog: 101009321, Suohong Liu: 101002340, Xiyi Liu: 101004577, Alex Trostanovsky: 100984702
+% \subsection*{Team member names}
+% \begin{center}
+%     \begin{tabular}{ |l|c| }
+%         \hline
+%         \textbf{Name}     & \textbf{Student ID} \\
+%         \hline
+%         Jaime Herzog      & 101009321           \\
+%         Suohong Liu       & 101002340           \\
+%         Xiyi Liu          & 101004577           \\
+%         Alex Trostanovsky & 100984702           \\
+%         \hline
+%     \end{tabular}
+% \end{center}
+
+% \clearpage
+
+% \clearpage
+\section*{Functional Requirements (FR)}
+
+\begin{itemize}
+
+    \item \textbf{\textit{Bracket Generation/Maintenance}}
+        \begin{todolist}
+            \item[\done]{{TOs can create joinable double elimination brackets}}\label{1.1}
+            \item[\done]{{Entrants can use system to enter joinable double elimination brackets}}\label{1.2}
+            \item[\done]{{Given a seeded list of entrants, output a correct double elimination bracket}}\label{1.3}
+            \item[\done]{{TOs can access a setup screen where they seed (rank) the entrants dynamically and can view a preview of the bracket as seeded, then confirm the final active bracket}}\label{1.4}
+            
+                \begin{itemize}
+                    \item{If output of system is not accepted, TOs can reseed entrants}
+                \end{itemize}
+        \end{todolist}
+
+    \item \textbf{\textit{Profile Creation/Maintenance}}
+        \begin{todolist}
+            \item[\done]{Competitors/Organizers can create profiles which keep a history of:}\label{2.1}
+            \begin{itemize}
+                \item{tournaments entered and created, placement history}
+                \item{number of matches won/lost}
+                \item{overall matchups against opponents}
+                \item{additional user profile information}
+            \end{itemize}
+            \item[\done]{The system supports both user profiles and competitors who haven’t created a profile (Guest Users)}
+        \end{todolist}
+
+    \item \textbf{\textit{Data Input/Processing}}
+        \begin{todolist}
+            \item[\done]{Tournament organizers can enter tournament results in active brackets}
+            \item[\done]{Use dynamic tournament results to render Losers brackets and subsequent Winners rounds during competitions in real time}
+
+        \end{todolist}
+
+    \item \textbf{\textit{Bracket Visualization}}
+        \begin{todolist}
+            \item[\done]{Users can access multiple views of brackets:} \label{4.1}
+            \begin{itemize}
+                \item{Winners / Losers brackets}
+                \item{Specific bracket rounds}
+            \end{itemize}
+            \item[\partly]{Users can click on competitors in rounds to view their profile}
+        \end{todolist}
+    
+\end{itemize}
+\section*{Non-Functional Requirements (NFR)}
+\begin{itemize}
+\item \textbf{\textit{Useability}}: \texttt{Brackit's} main selling point - current platforms are simply not usable on mobile devices. 
+    \begin{todolist}
+    \item[\done]{Users can clearly view and understand bracket structure and competitors’ placement within brackets}
+    \item[\done]{Visually coherent mobile representation of a double elimination bracket}
+    \item[\partly]{Seamless competitor entry (by TOs) to brackets in the setup phase}
+    \end{todolist}
+
+\item \textbf{\textit{Screen Adaption}}
+    \begin{todolist}
+    \item[\partly]{Users can visualize brackets in portrait and landscape modes}
+    \end{todolist}
+
+
+\item \textbf{\textit{Methodology}}
+\begin{center}
+    \begin{tabular}{ |p{75mm}|p{75mm}| }
+        \hline
+        \textbf{IDE and Version Control}  \newline
+        {\href{https://developer.android.com/studio}{Android Studio}},
+        {\href{https://code.visualstudio.com/}{Visual Studio Code}},
+        {\href{https://github.com/}{GitHub}}   & 
+        \textbf{Languages/Frameworks} \newline 
+        {\href{https://facebook.github.io/react-native/}{\sout{React-Native}}},
+        \textcolor{red}{Android-Kotlin},
+        {\href{https://www.python.org/}{Python}}, 
+        \textcolor{red}{Flask}\\
+        \hline
+        \textbf{Platform} \newline
+        {\href{https://www.android.com/}{Android}} & 
+        \textbf{Development Process} \newline
+        {\href{https://agilemanifesto.org/}{Agile}} \\
+        \hline
+    \end{tabular}
+\end{center}
+\end{itemize}
+
+
+
+
+% \section*{Detailed User Scenarios }
+
+% \begin{itemize}
+% \item{\textsc{Tournament organizer is hosting a tournament and wants to enter 14 people into a bracket }}    \begin{itemize}
+
+% \item TO presses \texttt{Create bracket} Button (FR \ref{1.1})
+% \item TO specifies number of competitors
+% \item 14 Entrants join newly created bracket (See User Scenario 3) (FR \ref{1.2})
+% \item TO seeds (ranks) entrants
+% \item TO submits seeded list of entrants 
+% \item Valid seeded double-elimination bracket produced and returned for preview (FR \ref{1.3})
+% \item TO accepts bracket preview, and creates active bracket
+% (FR \ref{1.4})
+% \end{itemize}
+% \item{\textsc{A user wants to create a user profile}} (FR \ref{2.1})   \begin{itemize}
+
+% \item User presses \texttt{Create profile} button
+% \item User provides Username, password, email address, and additional information
+% \item User submits profile 
+% \item Profile attributes are validated 
+% \item User profile is created
+% \end{itemize}
+% \item{\textsc{A competitor enters a setup-phase bracket}}   (FR \ref{1.2}) \begin{itemize}
+
+% \item QR Code associated with setup-phase bracket generated by system (Unique QR Code per bracket) 
+% \item TO presses \texttt{Display QR code}
+% \item QR Code associated with setup-phase bracket retrieved by system
+% \item TO displays QR code associated with newly created bracket
+% \item Competitor presses \texttt{Join bracket}
+% \item Competitor scans TO’s QR code
+% \item QR Code validated against system
+% \item Competitor is entered into setup-phase bracket
+% \end{itemize}
+
+% \item{\textsc{A spectator wants to view an active bracket}} (FR \ref{4.1})   \begin{itemize}
+
+% \item QR Code associated with active bracket generated by system (Unique QR Code per bracket)
+% \item TO presses \texttt{Display QR code}
+% \item QR Code associated with active bracket retrieved by system
+% \item TO displays QR code associated with active bracket
+% \item Spectator presses \texttt{View bracket}
+% \item QR Code validated against system
+% \item Spectator is able to view active bracket
+% \end{itemize}
+    
+    
+
+% \bibliography{mybib.bib}
+% \bibliographystyle{plain}
+\end{document}
