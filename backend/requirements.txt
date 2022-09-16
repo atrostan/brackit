@@ -37,7 +37,7 @@ jupyter-core==4.6.3
 jupyterlab==1.2.6
 jupyterlab-server==1.0.6
 kiwisolver==1.1.0
-Mako==1.1.1
+Mako==1.2.2
 MarkupSafe==1.1.1
 marshmallow==3.5.0
 marshmallow-sqlalchemy==0.22.2
